@@ -1,0 +1,242 @@
+<svg width="100%" viewBox="0 0 980 700" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="10">
+<defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#888" stroke-width="1.5"/></marker>
+  <marker id="arrb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#185FA5" stroke-width="1.5"/></marker>
+</defs>
+
+<!-- PLATFORM ZONE (top, no tenant_id) -->
+<rect x="10" y="8" width="960" height="120" rx="8" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="1" stroke-dasharray="5,3"/>
+<text x="22" y="24" font-size="11" font-weight="700" fill="#3C3489">Platform-level tables (no tenant_id)</text>
+
+<!-- tenants -->
+<rect x="30" y="32" width="160" height="84" rx="5" fill="#fff" stroke="#534AB7" stroke-width="1"/>
+<rect x="30" y="32" width="160" height="18" rx="5" fill="#534AB7"/>
+<text x="110" y="44" text-anchor="middle" font-weight="700" fill="#fff" font-size="10">tenants</text>
+<text x="38" y="60" fill="#3C3489">🔑 id UUID PK</text>
+<text x="38" y="72" fill="#534AB7">name, slug (UNIQUE)</text>
+<text x="38" y="84" fill="#534AB7">plan_id FK → sub_plans</text>
+<text x="38" y="96" fill="#534AB7">status, settings JSONB</text>
+<text x="38" y="108" fill="#534AB7">created_at, updated_at</text>
+
+<!-- subscription_plans -->
+<rect x="210" y="32" width="160" height="84" rx="5" fill="#fff" stroke="#534AB7" stroke-width="1"/>
+<rect x="210" y="32" width="160" height="18" rx="5" fill="#534AB7"/>
+<text x="290" y="44" text-anchor="middle" font-weight="700" fill="#fff" font-size="10">subscription_plans</text>
+<text x="218" y="60" fill="#3C3489">🔑 id UUID PK</text>
+<text x="218" y="72" fill="#534AB7">name, slug (UNIQUE)</text>
+<text x="218" y="84" fill="#534AB7">max_branches, features</text>
+<text x="218" y="96" fill="#534AB7">price_monthly</text>
+<text x="218" y="108" fill="#534AB7">stripe_price_id</text>
+
+<!-- permissions -->
+<rect x="390" y="32" width="160" height="84" rx="5" fill="#fff" stroke="#534AB7" stroke-width="1"/>
+<rect x="390" y="32" width="160" height="18" rx="5" fill="#534AB7"/>
+<text x="470" y="44" text-anchor="middle" font-weight="700" fill="#fff" font-size="10">permissions (seed)</text>
+<text x="398" y="60" fill="#3C3489">🔑 id UUID PK</text>
+<text x="398" y="72" fill="#534AB7">slug VARCHAR UNIQUE</text>
+<text x="398" y="84" fill="#534AB7">module, label</text>
+<text x="398" y="96" fill="#534AB7">description</text>
+<text x="398" y="108" fill="#534AB7">sort_order</text>
+
+<!-- audit_log -->
+<rect x="570" y="32" width="180" height="84" rx="5" fill="#fff" stroke="#534AB7" stroke-width="1"/>
+<rect x="570" y="32" width="180" height="18" rx="5" fill="#534AB7"/>
+<text x="660" y="44" text-anchor="middle" font-weight="700" fill="#fff" font-size="10">audit_log (write-only)</text>
+<text x="578" y="60" fill="#3C3489">🔑 id UUID PK</text>
+<text x="578" y="72" fill="#534AB7">tenant_id FK (nullable)</text>
+<text x="578" y="84" fill="#534AB7">actor_id, actor_type, action</text>
+<text x="578" y="96" fill="#534AB7">resource_type, resource_id</text>
+<text x="578" y="108" fill="#534AB7">changes JSONB, ip, created_at</text>
+
+<!-- platform_admins -->
+<rect x="770" y="32" width="160" height="84" rx="5" fill="#fff" stroke="#534AB7" stroke-width="1"/>
+<rect x="770" y="32" width="160" height="18" rx="5" fill="#534AB7"/>
+<text x="850" y="44" text-anchor="middle" font-weight="700" fill="#fff" font-size="10">platform_admins</text>
+<text x="778" y="60" fill="#3C3489">🔑 id UUID PK</text>
+<text x="778" y="72" fill="#534AB7">name, email UNIQUE</text>
+<text x="778" y="84" fill="#534AB7">password</text>
+<text x="778" y="96" fill="#534AB7">created_at</text>
+
+<!-- TENANT DATA ZONE -->
+<rect x="10" y="140" width="960" height="550" rx="8" fill="#E6F1FB" stroke="#85B7EB" stroke-width="1" stroke-dasharray="5,3"/>
+<text x="22" y="158" font-size="11" font-weight="700" fill="#0C447C">Tenant-scoped tables (all have tenant_id NOT NULL FK → tenants, enforced by TenantScope Global Scope)</text>
+
+<!-- CORE: branches, users, roles -->
+<!-- branches -->
+<rect x="30" y="168" width="160" height="96" rx="5" fill="#fff" stroke="#185FA5" stroke-width="1"/>
+<rect x="30" y="168" width="160" height="18" rx="5" fill="#185FA5"/>
+<text x="110" y="180" text-anchor="middle" font-weight="700" fill="#fff" font-size="10">branches</text>
+<text x="38" y="196" fill="#0C447C">🔑 id UUID PK</text>
+<text x="38" y="208" fill="#185FA5">🔗 tenant_id FK</text>
+<text x="38" y="220" fill="#185FA5">name, address JSONB</text>
+<text x="38" y="232" fill="#185FA5">timezone, currency</text>
+<text x="38" y="244" fill="#185FA5">operating_hours JSONB</text>
+<text x="38" y="256" fill="#185FA5">status, settings JSONB</text>
+
+<!-- users (staff) -->
+<rect x="210" y="168" width="160" height="96" rx="5" fill="#fff" stroke="#185FA5" stroke-width="1"/>
+<rect x="210" y="168" width="160" height="18" rx="5" fill="#185FA5"/>
+<text x="290" y="180" text-anchor="middle" font-weight="700" fill="#fff" font-size="10">users (staff)</text>
+<text x="218" y="196" fill="#0C447C">🔑 id UUID PK</text>
+<text x="218" y="208" fill="#185FA5">🔗 tenant_id FK</text>
+<text x="218" y="220" fill="#185FA5">name, email (UNIQUE/tenant)</text>
+<text x="218" y="232" fill="#185FA5">password, status</text>
+<text x="218" y="244" fill="#185FA5">employment JSONB</text>
+<text x="218" y="256" fill="#185FA5">documents JSONB</text>
+
+<!-- roles -->
+<rect x="390" y="168" width="160" height="84" rx="5" fill="#fff" stroke="#185FA5" stroke-width="1"/>
+<rect x="390" y="168" width="160" height="18" rx="5" fill="#185FA5"/>
+<text x="470" y="180" text-anchor="middle" font-weight="700" fill="#fff" font-size="10">roles</text>
+<text x="398" y="196" fill="#0C447C">🔑 id UUID PK</text>
+<text x="398" y="208" fill="#185FA5">🔗 tenant_id FK</text>
+<text x="398" y="220" fill="#185FA5">name, slug (UNIQUE/tenant)</text>
+<text x="398" y="232" fill="#185FA5">is_system BOOL</text>
+<text x="398" y="244" fill="#185FA5">created_by FK → users</text>
+
+<!-- role_permissions pivot -->
+<rect x="570" y="168" width="160" height="60" rx="5" fill="#fff" stroke="#185FA5" stroke-width="1"/>
+<rect x="570" y="168" width="160" height="18" rx="5" fill="#185FA5"/>
+<text x="650" y="180" text-anchor="middle" font-weight="700" fill="#fff" font-size="10">role_permissions</text>
+<text x="578" y="196" fill="#185FA5">🔗 role_id FK → roles</text>
+<text x="578" y="208" fill="#185FA5">🔗 permission_id FK</text>
+<text x="578" y="220" fill="#185FA5">PK(role_id, permission_id)</text>
+
+<!-- user_roles -->
+<rect x="750" y="168" width="190" height="84" rx="5" fill="#fff" stroke="#185FA5" stroke-width="1"/>
+<rect x="750" y="168" width="190" height="18" rx="5" fill="#185FA5"/>
+<text x="845" y="180" text-anchor="middle" font-weight="700" fill="#fff" font-size="10">user_roles</text>
+<text x="758" y="196" fill="#0C447C">🔑 id UUID PK</text>
+<text x="758" y="208" fill="#185FA5">🔗 user_id FK, role_id FK</text>
+<text x="758" y="220" fill="#185FA5">🔗 tenant_id FK</text>
+<text x="758" y="232" fill="#185FA5">branch_ids UUID[]</text>
+<text x="758" y="244" fill="#185FA5">assigned_by FK, assigned_at</text>
+
+<!-- ORDERS section -->
+<rect x="30" y="286" width="170" height="120" rx="5" fill="#fff" stroke="#993C1D" stroke-width="1"/>
+<rect x="30" y="286" width="170" height="18" rx="5" fill="#993C1D"/>
+<text x="115" y="298" text-anchor="middle" font-weight="700" fill="#fff" font-size="10">orders</text>
+<text x="38" y="314" fill="#712B13">🔑 id UUID PK</text>
+<text x="38" y="326" fill="#993C1D">🔗 tenant_id, branch_id FK</text>
+<text x="38" y="338" fill="#993C1D">🔗 customer_profile_id FK</text>
+<text x="38" y="350" fill="#993C1D">order_ref, source ENUM</text>
+<text x="38" y="362" fill="#993C1D">status ENUM (9 stages)</text>
+<text x="38" y="374" fill="#993C1D">items JSONB, total</text>
+<text x="38" y="386" fill="#993C1D">stripe_payment_intent_id</text>
+<text x="38" y="398" fill="#993C1D">payment_status, cancelled_at</text>
+
+<!-- MENU section -->
+<rect x="220" y="286" width="160" height="120" rx="5" fill="#fff" stroke="#3B6D11" stroke-width="1"/>
+<rect x="220" y="286" width="160" height="18" rx="5" fill="#3B6D11"/>
+<text x="300" y="298" text-anchor="middle" font-weight="700" fill="#fff" font-size="10">menu_items</text>
+<text x="228" y="314" fill="#27500A">🔑 id UUID PK</text>
+<text x="228" y="326" fill="#3B6D11">🔗 tenant_id, category_id</text>
+<text x="228" y="338" fill="#3B6D11">sku (UNIQUE/tenant)</text>
+<text x="228" y="350" fill="#3B6D11">name, price, cost_price</text>
+<text x="228" y="362" fill="#3B6D11">allergens JSONB</text>
+<text x="228" y="374" fill="#3B6D11">dietary_flags JSONB</text>
+<text x="228" y="386" fill="#3B6D11">is_active, is_master</text>
+<text x="228" y="398" fill="#3B6D11">eighty_six_log →</text>
+
+<!-- RESERVATIONS section -->
+<rect x="395" y="286" width="165" height="120" rx="5" fill="#fff" stroke="#0F6E56" stroke-width="1"/>
+<rect x="395" y="286" width="165" height="18" rx="5" fill="#0F6E56"/>
+<text x="477" y="298" text-anchor="middle" font-weight="700" fill="#fff" font-size="10">reservations</text>
+<text x="403" y="314" fill="#085041">🔑 id UUID PK</text>
+<text x="403" y="326" fill="#0F6E56">🔗 tenant_id, branch_id</text>
+<text x="403" y="338" fill="#0F6E56">🔗 table_id, customer_id</text>
+<text x="403" y="350" fill="#0F6E56">reservation_date, time</text>
+<text x="403" y="362" fill="#0F6E56">party_size, status ENUM</text>
+<text x="403" y="374" fill="#0F6E56">duration_minutes</text>
+<text x="403" y="386" fill="#0F6E56">stripe_payment_intent_id</text>
+<text x="403" y="398" fill="#0F6E56">reminder_sent_24h, _2h</text>
+
+<!-- INVENTORY section -->
+<rect x="575" y="286" width="165" height="120" rx="5" fill="#fff" stroke="#854F0B" stroke-width="1"/>
+<rect x="575" y="286" width="165" height="18" rx="5" fill="#854F0B"/>
+<text x="657" y="298" text-anchor="middle" font-weight="700" fill="#fff" font-size="10">inventory_items</text>
+<text x="583" y="314" fill="#633806">🔑 id UUID PK</text>
+<text x="583" y="326" fill="#854F0B">🔗 tenant_id, branch_id</text>
+<text x="583" y="338" fill="#854F0B">name, sku, unit</text>
+<text x="583" y="350" fill="#854F0B">current_stock DECIMAL</text>
+<text x="583" y="362" fill="#854F0B">wac DECIMAL (WAC)</text>
+<text x="583" y="374" fill="#854F0B">par_level, reorder_point</text>
+<text x="583" y="386" fill="#854F0B">critical_threshold</text>
+<text x="583" y="398" fill="#854F0B">allergen_flags JSONB</text>
+
+<!-- CUSTOMERS section -->
+<rect x="755" y="286" width="185" height="120" rx="5" fill="#fff" stroke="#993556" stroke-width="1"/>
+<rect x="755" y="286" width="185" height="18" rx="5" fill="#993556"/>
+<text x="847" y="298" text-anchor="middle" font-weight="700" fill="#fff" font-size="10">customer_profiles</text>
+<text x="763" y="314" fill="#72243E">🔑 id UUID PK</text>
+<text x="763" y="326" fill="#993556">🔗 tenant_id FK</text>
+<text x="763" y="338" fill="#993556">phone E.164 (UNIQUE/tenant)</text>
+<text x="763" y="350" fill="#993556">loyalty_number, tier</text>
+<text x="763" y="362" fill="#993556">loyalty_points, lifetime_spend</text>
+<text x="763" y="374" fill="#993556">allergen_notes, no_show_count</text>
+<text x="763" y="386" fill="#993556">status (active|anonymised)</text>
+<text x="763" y="398" fill="#993556">gdpr_consent JSONB</text>
+
+<!-- ANALYTICS section -->
+<rect x="30" y="440" width="910" height="60" rx="5" fill="#fff" stroke="#534AB7" stroke-width="1"/>
+<rect x="30" y="440" width="910" height="18" rx="5" fill="#534AB7"/>
+<text x="485" y="452" text-anchor="middle" font-weight="700" fill="#fff" font-size="10">analytics_* tables (READ ONLY — never written to by business logic, only by aggregation jobs)</text>
+<text x="38" y="470" fill="#534AB7">analytics_daily_revenue(tenant_id,branch_id,date,channel,gross_revenue,...)</text>
+<text x="400" y="470" fill="#534AB7">analytics_dish_performance(tenant_id,branch_id,menu_item_id,period,...,engineering_quadrant)</text>
+<text x="38" y="484" fill="#534AB7">analytics_hourly_snapshots(tenant_id,branch_id,snapshot_at,metric_key,metric_value JSONB)</text>
+<text x="480" y="484" fill="#534AB7">analytics_customer_segments(tenant_id,customer_profile_id,rfm_*,clv_*,churn_risk_score)</text>
+
+<!-- EVENTS section (condensed) -->
+<rect x="30" y="524" width="200" height="60" rx="5" fill="#fff" stroke="#993C1D" stroke-width="1"/>
+<rect x="30" y="524" width="200" height="18" rx="5" fill="#993C1D"/>
+<text x="130" y="536" text-anchor="middle" font-weight="700" fill="#fff" font-size="10">events</text>
+<text x="38" y="552" fill="#993C1D">tenant_id, branch_id, space_id FK</text>
+<text x="38" y="564" fill="#993C1D">status ENUM (5 phases), corporate_account_id FK</text>
+<text x="38" y="576" fill="#993C1D">parent_event_id FK (self), recurrence_rule JSONB</text>
+
+<!-- loyalty_transactions -->
+<rect x="245" y="524" width="200" height="60" rx="5" fill="#fff" stroke="#993556" stroke-width="1"/>
+<rect x="245" y="524" width="200" height="18" rx="5" fill="#993556"/>
+<text x="345" y="536" text-anchor="middle" font-weight="700" fill="#fff" font-size="10">loyalty_transactions</text>
+<text x="253" y="552" fill="#993556">tenant_id, customer_profile_id FK</text>
+<text x="253" y="564" fill="#993556">transaction_type, points_delta</text>
+<text x="253" y="576" fill="#993556">balance_after, source_type, source_id</text>
+
+<!-- stock_movements -->
+<rect x="460" y="524" width="200" height="60" rx="5" fill="#fff" stroke="#854F0B" stroke-width="1"/>
+<rect x="460" y="524" width="200" height="18" rx="5" fill="#854F0B"/>
+<text x="560" y="536" text-anchor="middle" font-weight="700" fill="#fff" font-size="10">stock_movements</text>
+<text x="468" y="552" fill="#854F0B">tenant_id, branch_id, inventory_item_id FK</text>
+<text x="468" y="564" fill="#854F0B">movement_type ENUM, quantity</text>
+<text x="468" y="576" fill="#854F0B">wac_before, wac_after, reference_id</text>
+
+<!-- eighty_six_log -->
+<rect x="675" y="524" width="270" height="60" rx="5" fill="#fff" stroke="#3B6D11" stroke-width="1"/>
+<rect x="675" y="524" width="270" height="18" rx="5" fill="#3B6D11"/>
+<text x="810" y="536" text-anchor="middle" font-weight="700" fill="#fff" font-size="10">eighty_six_log</text>
+<text x="683" y="552" fill="#3B6D11">tenant_id, branch_id, menu_item_id FK</text>
+<text x="683" y="564" fill="#3B6D11">trigger_type ENUM (manual|inventory_stockout)</text>
+<text x="683" y="576" fill="#3B6D11">started_at, ended_at (NULL=active), restored_by FK</text>
+
+<!-- Relationship arrows (key ones) -->
+<line x1="110" y1="116" x2="110" y2="168" stroke="#185FA5" stroke-width="0.8" marker-end="url(#arrb)"/>
+<line x1="210" y1="80" x2="110" y2="130" stroke="#534AB7" stroke-width="0.6" stroke-dasharray="4,2" marker-end="url(#arr)"/>
+<line x1="290" y1="264" x2="290" y2="286" stroke="#185FA5" stroke-width="0.8" marker-end="url(#arrb)"/>
+<line x1="470" y1="252" x2="650" y2="228" stroke="#185FA5" stroke-width="0.6" stroke-dasharray="3,2"/>
+<line x1="650" y1="228" x2="650" y2="168" stroke="#185FA5" stroke-width="0.6" stroke-dasharray="3,2" marker-end="url(#arrb)"/>
+<line x1="110" y1="406" x2="847" y2="286" stroke="#993556" stroke-width="0.6" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+<line x1="115" y1="406" x2="350" y2="524" stroke="#993556" stroke-width="0.6" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+<line x1="660" y1="406" x2="560" y2="524" stroke="#854F0B" stroke-width="0.6" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+<line x1="300" y1="406" x2="810" y2="524" stroke="#3B6D11" stroke-width="0.6" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+
+<!-- Legend -->
+<rect x="30" y="652" width="920" height="36" rx="4" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+<text x="40" y="666" font-size="9" fill="#444">🔑 Primary key</text>
+<text x="130" y="666" font-size="9" fill="#444">🔗 Foreign key</text>
+<text x="200" y="666" font-size="9" fill="#185FA5">── Relationship (solid)</text>
+<text x="340" y="666" font-size="9" fill="#888">- - Derived/cross-module reference</text>
+<text x="530" y="666" font-size="9" fill="#444">All tenant tables: WHERE tenant_id = ? applied automatically by TenantScope</text>
+<text x="40" y="680" font-size="9" fill="#A32D2D">Audit log: INSERT only — no UPDATE or DELETE ever</text>
+<text x="300" y="680" font-size="9" fill="#3B6D11">eighty_six_log: trigger_type MUST be checked before allowing restore</text>
+<text x="640" y="680" font-size="9" fill="#854F0B">WAC recalculated on every GRN → propagates to menu_items.cost_price</text>
+</svg>

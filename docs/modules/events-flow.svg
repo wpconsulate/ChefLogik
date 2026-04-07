@@ -1,0 +1,131 @@
+<svg width="100%" viewBox="0 0 900 560" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="10">
+<defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#888" stroke-width="1.5"/></marker><marker id="arrd" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#A32D2D" stroke-width="1.5"/></marker></defs>
+
+<!-- Title -->
+<text x="450" y="18" text-anchor="middle" font-weight="700" fill="#712B13" font-size="13">Events &amp; Functions — 5-Phase Lifecycle</text>
+
+<!-- Phase 1: Enquiry -->
+<rect x="20" y="34" width="155" height="130" rx="6" fill="#FAECE7" stroke="#993C1D" stroke-width="1.2"/>
+<rect x="20" y="34" width="155" height="22" rx="6" fill="#993C1D"/>
+<text x="97" y="50" text-anchor="middle" font-weight="700" fill="#fff" font-size="11">Phase 1: Enquiry</text>
+<text x="28" y="70" fill="#712B13">Trigger: enquiry form / call</text>
+<text x="28" y="84" fill="#712B13">Organiser details captured</text>
+<text x="28" y="98" fill="#993C1D">occasion_type, event_date</text>
+<text x="28" y="110" fill="#993C1D">guest_count, space_pref</text>
+<text x="28" y="124" fill="#993C1D">Status sub-states:</text>
+<text x="28" y="136" fill="#993C1D">new → contacted</text>
+<text x="28" y="148" fill="#993C1D">→ proposal_sent</text>
+<text x="28" y="158" fill="#993C1D">→ lost (with reason)</text>
+
+<!-- Phase 2: Proposal -->
+<rect x="195" y="34" width="155" height="130" rx="6" fill="#FAEEDA" stroke="#854F0B" stroke-width="1.2"/>
+<rect x="195" y="34" width="155" height="22" rx="6" fill="#854F0B"/>
+<text x="272" y="50" text-anchor="middle" font-weight="700" fill="#fff" font-size="11">Phase 2: Proposal</text>
+<text x="203" y="70" fill="#633806">Package selected (or custom)</text>
+<text x="203" y="84" fill="#633806">Menu agreed</text>
+<text x="203" y="98" fill="#854F0B">Minimum spend set</text>
+<text x="203" y="112" fill="#854F0B">Deposit amount calculated</text>
+<text x="203" y="126" fill="#854F0B">Proposal PDF sent</text>
+<text x="203" y="140" fill="#854F0B">Corporate check:</text>
+<text x="203" y="154" fill="#854F0B">credit_limit vs outstanding</text>
+
+<!-- Phase 3: Confirmed -->
+<rect x="370" y="34" width="155" height="130" rx="6" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
+<rect x="370" y="34" width="155" height="22" rx="6" fill="#0F6E56"/>
+<text x="447" y="50" text-anchor="middle" font-weight="700" fill="#fff" font-size="11">Phase 3: Confirmed</text>
+<text x="378" y="70" fill="#085041">Trigger: deposit paid</text>
+<text x="378" y="84" fill="#085041">Stripe webhook received</text>
+<text x="378" y="98" fill="#0F6E56">Pre-event tasks auto-generated</text>
+<text x="378" y="112" fill="#0F6E56">based on occasion_type</text>
+<text x="378" y="126" fill="#0F6E56">Space blocked on calendar</text>
+<text x="378" y="140" fill="#0F6E56">Staff assignments begin</text>
+<text x="378" y="154" fill="#0F6E56">Run sheet initialised</text>
+
+<!-- Phase 4: Pre-event -->
+<rect x="545" y="34" width="155" height="130" rx="6" fill="#E6F1FB" stroke="#185FA5" stroke-width="1.2"/>
+<rect x="545" y="34" width="155" height="22" rx="6" fill="#185FA5"/>
+<text x="622" y="50" text-anchor="middle" font-weight="700" fill="#fff" font-size="11">Phase 4: Pre-event</text>
+<text x="553" y="70" fill="#0C447C">Trigger: T-72h auto-transition</text>
+<text x="553" y="84" fill="#0C447C">Run sheet finalised</text>
+<text x="553" y="98" fill="#185FA5">Task completion tracked</text>
+<text x="553" y="112" fill="#185FA5">Overdue → manager alert</text>
+<text x="553" y="126" fill="#185FA5">Final headcount confirmed</text>
+<text x="553" y="140" fill="#185FA5">Inventory pre-allocated</text>
+<text x="553" y="154" fill="#185FA5">Dietary requirements to KDS</text>
+
+<!-- Phase 5: Day-of -->
+<rect x="720" y="34" width="155" height="130" rx="6" fill="#EEEDFE" stroke="#534AB7" stroke-width="1.2"/>
+<rect x="720" y="34" width="155" height="22" rx="6" fill="#534AB7"/>
+<text x="797" y="50" text-anchor="middle" font-weight="700" fill="#fff" font-size="11">Phase 5: Day-of</text>
+<text x="728" y="70" fill="#3C3489">Trigger: event_date</text>
+<text x="728" y="84" fill="#3C3489">Run sheet pushed to Host</text>
+<text x="728" y="98" fill="#534AB7">Orders tracked via KDS</text>
+<text x="728" y="112" fill="#534AB7">actual_spend updated live</text>
+<text x="728" y="126" fill="#534AB7">Min spend gate at close</text>
+<text x="728" y="140" fill="#534AB7">→ completed (invoice)</text>
+<text x="728" y="154" fill="#534AB7">or → cancelled</text>
+
+<!-- Arrows between phases -->
+<line x1="175" y1="100" x2="193" y2="100" stroke="#888" stroke-width="1.2" marker-end="url(#arr)"/>
+<line x1="350" y1="100" x2="368" y2="100" stroke="#888" stroke-width="1.2" marker-end="url(#arr)"/>
+<line x1="525" y1="100" x2="543" y2="100" stroke="#888" stroke-width="1.2" marker-end="url(#arr)"/>
+<line x1="700" y1="100" x2="718" y2="100" stroke="#888" stroke-width="1.2" marker-end="url(#arr)"/>
+
+<!-- Terminal states -->
+<rect x="195" y="200" width="155" height="50" rx="5" fill="#FCEBEB" stroke="#A32D2D" stroke-width="1.2"/>
+<text x="272" y="220" text-anchor="middle" font-weight="700" fill="#791F1F">lost</text>
+<text x="272" y="234" text-anchor="middle" fill="#A32D2D">price | date unavail | competitor</text>
+<text x="272" y="246" text-anchor="middle" fill="#A32D2D">no_response | other</text>
+
+<rect x="545" y="200" width="155" height="50" rx="5" fill="#FCEBEB" stroke="#A32D2D" stroke-width="1.2"/>
+<text x="622" y="220" text-anchor="middle" font-weight="700" fill="#791F1F">cancelled</text>
+<text x="622" y="234" text-anchor="middle" fill="#A32D2D">deposit policy applies</text>
+<text x="622" y="246" text-anchor="middle" fill="#A32D2D">staff notified</text>
+
+<rect x="720" y="200" width="155" height="50" rx="5" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.5"/>
+<text x="797" y="220" text-anchor="middle" font-weight="700" fill="#085041">completed</text>
+<text x="797" y="234" text-anchor="middle" fill="#0F6E56">invoice issued</text>
+<text x="797" y="246" text-anchor="middle" fill="#0F6E56">loyalty points awarded</text>
+
+<line x1="272" y1="164" x2="272" y2="200" stroke="#A32D2D" stroke-width="0.8" stroke-dasharray="4,3" marker-end="url(#arrd)"/>
+<line x1="622" y1="164" x2="622" y2="200" stroke="#A32D2D" stroke-width="0.8" stroke-dasharray="4,3" marker-end="url(#arrd)"/>
+<line x1="797" y1="164" x2="797" y2="200" stroke="#0F6E56" stroke-width="0.8" marker-end="url(#arr)"/>
+
+<!-- Deposit flow detail -->
+<rect x="20" y="280" width="420" height="90" rx="6" fill="#FAEEDA" stroke="#854F0B" stroke-width="1"/>
+<text x="35" y="298" font-weight="600" fill="#633806">Deposit Collection (Phase 2 → 3 gate)</text>
+<text x="35" y="314" fill="#854F0B">1. Events Manager sets deposit_amount on event record</text>
+<text x="35" y="328" fill="#854F0B">2. POST /events/{id}/deposit → StripeService.createPaymentIntent() → client_secret returned</text>
+<text x="35" y="342" fill="#854F0B">3. Customer pays via Stripe.js (card never hits server)</text>
+<text x="35" y="356" fill="#854F0B">4. Stripe webhook payment_intent.succeeded → status transitions to 'confirmed' (NOT synchronously)</text>
+
+<!-- Corporate accounts -->
+<rect x="455" y="280" width="420" height="90" rx="6" fill="#E6F1FB" stroke="#185FA5" stroke-width="1"/>
+<text x="470" y="298" font-weight="600" fill="#0C447C">Corporate Accounts (net-30 terms)</text>
+<text x="470" y="314" fill="#185FA5">corporate_accounts: company, credit_limit, outstanding_balance</text>
+<text x="470" y="328" fill="#185FA5">On new booking: sum(active events) + new_event_value vs credit_limit</text>
+<text x="470" y="342" fill="#185FA5">Within limit → no deposit required → skip Phase 2 → 3 gate</text>
+<text x="470" y="356" fill="#185FA5">Over limit → requires Owner authorisation before proceeding</text>
+
+<!-- Recurring events -->
+<rect x="20" y="388" width="420" height="90" rx="6" fill="#EEEDFE" stroke="#534AB7" stroke-width="1"/>
+<text x="35" y="406" font-weight="600" fill="#3C3489">Recurring Events</text>
+<text x="35" y="422" fill="#534AB7">Parent event: recurrence_rule JSONB { frequency, day_of_month, occurrences }</text>
+<text x="35" y="436" fill="#534AB7">Child events: individual date records, each with own status + billing</text>
+<text x="35" y="450" fill="#534AB7">Cancel child → does not affect recurrence (siblings unaffected)</text>
+<text x="35" y="464" fill="#534AB7">Cancel parent → cancels all future confirmed children (completed children untouched)</text>
+
+<!-- Run sheet -->
+<rect x="455" y="388" width="420" height="90" rx="6" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1"/>
+<text x="470" y="406" font-weight="600" fill="#085041">Run Sheet &amp; Minimum Spend</text>
+<text x="470" y="422" fill="#0F6E56">run_sheet JSONB: timeline entries, menu, dietary summary, staff, notes</text>
+<text x="470" y="436" fill="#0F6E56">Auto-generated on confirmation, pushed to Host on day_of transition</text>
+<text x="470" y="450" fill="#0F6E56">actual_spend updates in real time as orders are added to the event</text>
+<text x="470" y="464" fill="#0F6E56">If actual_spend &lt; minimum_spend at bill close → manager must add charge</text>
+
+<!-- Pre-event tasks -->
+<rect x="20" y="494" width="855" height="50" rx="6" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.8"/>
+<text x="35" y="512" font-weight="600" fill="#2C2C2A">Pre-event Tasks (auto-generated on confirmation)</text>
+<text x="35" y="530" fill="#5F5E5A">Tasks seeded from occasion_type templates (birthday: confirm headcount T-3, order cake T-5 | corporate: send AV checklist T-7, confirm invoice T-5)</text>
+<text x="35" y="542" fill="#5F5E5A">Assigned to staff, due dates relative to event_date · Overdue → manager alert via Reverb + push notification</text>
+</svg>

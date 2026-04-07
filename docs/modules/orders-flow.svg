@@ -1,0 +1,155 @@
+<svg width="100%" viewBox="0 0 960 640" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="10">
+<defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#888" stroke-width="1.5"/></marker><marker id="arrd" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#A32D2D" stroke-width="1.5"/></marker></defs>
+
+<!-- 7 Channels (left) -->
+<text x="80" y="18" text-anchor="middle" font-weight="700" fill="#3C3489" font-size="11">7 Order Channels</text>
+<rect x="10" y="26" width="140" height="22" rx="4" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.8"/>
+<text x="80" y="41" text-anchor="middle" fill="#3C3489">Dine-in POS</text>
+<rect x="10" y="54" width="140" height="22" rx="4" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.8"/>
+<text x="80" y="69" text-anchor="middle" fill="#3C3489">Dine-in QR code</text>
+<rect x="10" y="82" width="140" height="22" rx="4" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.8"/>
+<text x="80" y="97" text-anchor="middle" fill="#3C3489">Takeaway counter</text>
+<rect x="10" y="110" width="140" height="22" rx="4" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.8"/>
+<text x="80" y="125" text-anchor="middle" fill="#3C3489">Takeaway phone</text>
+<rect x="10" y="138" width="140" height="22" rx="4" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.8"/>
+<text x="80" y="153" text-anchor="middle" fill="#3C3489">Online ordering</text>
+<rect x="10" y="166" width="140" height="22" rx="4" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.8"/>
+<text x="80" y="181" text-anchor="middle" fill="#633806">Uber Eats (webhook)</text>
+<rect x="10" y="194" width="140" height="22" rx="4" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.8"/>
+<text x="80" y="209" text-anchor="middle" fill="#633806">DoorDash (webhook)</text>
+
+<!-- Normalisation -->
+<rect x="180" y="90" width="120" height="64" rx="5" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="1"/>
+<text x="240" y="110" text-anchor="middle" font-weight="600" fill="#2C2C2A">Channel</text>
+<text x="240" y="124" text-anchor="middle" font-weight="600" fill="#2C2C2A">Normaliser</text>
+<text x="240" y="138" text-anchor="middle" fill="#5F5E5A">→ OrderDTO</text>
+<text x="240" y="150" text-anchor="middle" fill="#5F5E5A">tenant + branch</text>
+
+<!-- Arrows channels → normaliser -->
+<line x1="150" y1="37" x2="178" y2="118" stroke="#888" stroke-width="0.7" marker-end="url(#arr)"/>
+<line x1="150" y1="65" x2="178" y2="120" stroke="#888" stroke-width="0.7" marker-end="url(#arr)"/>
+<line x1="150" y1="93" x2="178" y2="122" stroke="#888" stroke-width="0.7" marker-end="url(#arr)"/>
+<line x1="150" y1="121" x2="178" y2="124" stroke="#888" stroke-width="0.7" marker-end="url(#arr)"/>
+<line x1="150" y1="149" x2="178" y2="126" stroke="#888" stroke-width="0.7" marker-end="url(#arr)"/>
+<line x1="150" y1="177" x2="178" y2="128" stroke="#888" stroke-width="0.7" marker-end="url(#arr)"/>
+<line x1="150" y1="205" x2="178" y2="130" stroke="#888" stroke-width="0.7" marker-end="url(#arr)"/>
+
+<!-- 9 Lifecycle stages -->
+<text x="480" y="18" text-anchor="middle" font-weight="700" fill="#712B13" font-size="11">9-Stage Lifecycle</text>
+
+<!-- Stage boxes -->
+<rect x="330" y="26" width="90" height="36" rx="5" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="1"/>
+<text x="375" y="42" text-anchor="middle" font-weight="600" fill="#2C2C2A">1. new</text>
+<text x="375" y="56" text-anchor="middle" fill="#5F5E5A">order created</text>
+
+<rect x="440" y="26" width="100" height="36" rx="5" fill="#FAEEDA" stroke="#854F0B" stroke-width="1"/>
+<text x="490" y="42" text-anchor="middle" font-weight="600" fill="#633806">2. confirmed</text>
+<text x="490" y="56" text-anchor="middle" fill="#854F0B">⚡ stock deducted</text>
+
+<rect x="560" y="26" width="100" height="36" rx="5" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1"/>
+<text x="610" y="42" text-anchor="middle" font-weight="600" fill="#085041">3. preparing</text>
+<text x="610" y="56" text-anchor="middle" fill="#0F6E56">KDS active</text>
+
+<rect x="680" y="26" width="90" height="36" rx="5" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1"/>
+<text x="725" y="42" text-anchor="middle" font-weight="600" fill="#085041">4. ready</text>
+<text x="725" y="56" text-anchor="middle" fill="#0F6E56">KDS complete</text>
+
+<rect x="790" y="26" width="110" height="36" rx="5" fill="#E6F1FB" stroke="#185FA5" stroke-width="1"/>
+<text x="845" y="42" text-anchor="middle" font-weight="600" fill="#0C447C">5. out for delivery</text>
+<text x="845" y="56" text-anchor="middle" fill="#185FA5">delivery assigned</text>
+
+<rect x="430" y="86" width="100" height="36" rx="5" fill="#E6F1FB" stroke="#185FA5" stroke-width="1"/>
+<text x="480" y="102" text-anchor="middle" font-weight="600" fill="#0C447C">6. delivered</text>
+<text x="480" y="116" text-anchor="middle" fill="#185FA5">customer received</text>
+
+<rect x="560" y="86" width="90" height="36" rx="5" fill="#E6F1FB" stroke="#185FA5" stroke-width="1"/>
+<text x="605" y="102" text-anchor="middle" font-weight="600" fill="#0C447C">7. served</text>
+<text x="605" y="116" text-anchor="middle" fill="#185FA5">table served</text>
+
+<rect x="680" y="86" width="100" height="36" rx="5" fill="#EEEDFE" stroke="#534AB7" stroke-width="1"/>
+<text x="730" y="102" text-anchor="middle" font-weight="600" fill="#3C3489">8. bill_settled</text>
+<text x="730" y="116" text-anchor="middle" fill="#534AB7">payment confirmed</text>
+
+<rect x="810" y="86" width="100" height="36" rx="5" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.5"/>
+<text x="860" y="102" text-anchor="middle" font-weight="600" fill="#085041">9. completed</text>
+<text x="860" y="116" text-anchor="middle" fill="#0F6E56">loyalty points issued</text>
+
+<!-- Stage arrows -->
+<line x1="300" y1="122" x2="328" y2="44" stroke="#888" stroke-width="1" marker-end="url(#arr)"/>
+<line x1="420" y1="44" x2="438" y2="44" stroke="#888" stroke-width="1" marker-end="url(#arr)"/>
+<line x1="540" y1="44" x2="558" y2="44" stroke="#888" stroke-width="1" marker-end="url(#arr)"/>
+<line x1="660" y1="44" x2="678" y2="44" stroke="#888" stroke-width="1" marker-end="url(#arr)"/>
+<line x1="770" y1="44" x2="788" y2="44" stroke="#888" stroke-width="1" marker-end="url(#arr)"/>
+<!-- delivery → delivered, then splits -->
+<line x1="845" y1="62" x2="845" y2="76" stroke="#888" stroke-width="1"/>
+<line x1="845" y1="76" x2="482" y2="86" stroke="#888" stroke-width="1" marker-end="url(#arr)"/>
+<!-- served + delivered → bill_settled -->
+<line x1="530" y1="104" x2="558" y2="104" stroke="#888" stroke-width="1" marker-end="url(#arr)"/>
+<line x1="650" y1="104" x2="678" y2="104" stroke="#888" stroke-width="1" marker-end="url(#arr)"/>
+<line x1="780" y1="104" x2="808" y2="104" stroke="#888" stroke-width="1" marker-end="url(#arr)"/>
+
+<!-- Dine-in shortcut: new → confirmed → preparing → ready → served → bill_settled → completed -->
+<text x="590" y="145" text-anchor="middle" fill="#888" font-size="9">dine-in: skips delivery stages</text>
+
+<!-- Cancelled (terminal) -->
+<rect x="330" y="168" width="110" height="50" rx="5" fill="#FCEBEB" stroke="#A32D2D" stroke-width="1.5"/>
+<text x="385" y="188" text-anchor="middle" font-weight="700" fill="#791F1F">cancelled</text>
+<text x="385" y="202" text-anchor="middle" fill="#A32D2D">terminal state</text>
+<text x="385" y="214" text-anchor="middle" fill="#A32D2D">from any active stage</text>
+
+<!-- Cancel arrows from stages -->
+<line x1="375" y1="62" x2="375" y2="168" stroke="#A32D2D" stroke-width="0.8" stroke-dasharray="4,3" marker-end="url(#arrd)"/>
+<line x1="490" y1="62" x2="390" y2="168" stroke="#A32D2D" stroke-width="0.8" stroke-dasharray="4,3" marker-end="url(#arrd)"/>
+
+<!-- Cancellation flow -->
+<text x="480" y="185" text-anchor="middle" font-weight="600" fill="#712B13" font-size="11">Cancellation & Refund Engine</text>
+<rect x="330" y="238" width="580" height="120" rx="6" fill="#FAECE7" stroke="#993C1D" stroke-width="1"/>
+<text x="350" y="258" font-weight="600" fill="#712B13">3 Cancellation Triggers</text>
+<rect x="340" y="264" width="150" height="32" rx="4" fill="#fff" stroke="#993C1D" stroke-width="0.6"/>
+<text x="415" y="278" text-anchor="middle" fill="#712B13">Customer-initiated</text>
+<text x="415" y="290" text-anchor="middle" fill="#993C1D">Full refund if pre-prep</text>
+<rect x="505" y="264" width="150" height="32" rx="4" fill="#fff" stroke="#993C1D" stroke-width="0.6"/>
+<text x="580" y="278" text-anchor="middle" fill="#712B13">Restaurant-initiated</text>
+<text x="580" y="290" text-anchor="middle" fill="#993C1D">Always full refund</text>
+<rect x="670" y="264" width="150" height="32" rx="4" fill="#fff" stroke="#993C1D" stroke-width="0.6"/>
+<text x="745" y="278" text-anchor="middle" fill="#712B13">Delivery failure</text>
+<text x="745" y="290" text-anchor="middle" fill="#993C1D">Assessed case-by-case</text>
+<text x="350" y="318" font-weight="600" fill="#712B13">RefundEngine.process() →</text>
+<rect x="450" y="306" width="110" height="24" rx="3" fill="#fff" stroke="#993C1D" stroke-width="0.5"/>
+<text x="505" y="322" text-anchor="middle" fill="#712B13">Stripe Refund API</text>
+<rect x="570" y="306" width="110" height="24" rx="3" fill="#fff" stroke="#993C1D" stroke-width="0.5"/>
+<text x="625" y="322" text-anchor="middle" fill="#712B13">Wallet credit</text>
+<rect x="690" y="306" width="80" height="24" rx="3" fill="#fff" stroke="#993C1D" stroke-width="0.5"/>
+<text x="730" y="322" text-anchor="middle" fill="#712B13">Voucher</text>
+<rect x="780" y="306" width="110" height="24" rx="3" fill="#fff" stroke="#993C1D" stroke-width="0.5"/>
+<text x="835" y="322" text-anchor="middle" fill="#712B13">Cash (recorded)</text>
+<text x="350" y="350" fill="#993C1D">Stock restored for unprepared items only · Stock NOT restored once preparing has started</text>
+
+<!-- Downstream effects -->
+<rect x="330" y="376" width="580" height="100" rx="6" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1"/>
+<text x="350" y="396" font-weight="600" fill="#085041" font-size="11">On confirmation → downstream effects (event chain)</text>
+<rect x="340" y="402" width="155" height="28" rx="4" fill="#fff" stroke="#0F6E56" stroke-width="0.6"/>
+<text x="417" y="414" text-anchor="middle" fill="#085041">DeductStockJob</text>
+<text x="417" y="426" text-anchor="middle" fill="#0F6E56">'critical' queue</text>
+<rect x="505" y="402" width="155" height="28" rx="4" fill="#fff" stroke="#0F6E56" stroke-width="0.6"/>
+<text x="582" y="414" text-anchor="middle" fill="#085041">SyncToKDS</text>
+<text x="582" y="426" text-anchor="middle" fill="#0F6E56">Reverb broadcast</text>
+<rect x="670" y="402" width="155" height="28" rx="4" fill="#fff" stroke="#0F6E56" stroke-width="0.6"/>
+<text x="747" y="414" text-anchor="middle" fill="#085041">BroadcastOrderUpdate</text>
+<text x="747" y="426" text-anchor="middle" fill="#0F6E56">dashboard refresh</text>
+<text x="350" y="462" fill="#0F6E56">On completion: LoyaltyPointsJob (earn rate × total) → atomic loyalty_transaction INSERT → tier check</text>
+
+<!-- Stripe payment note -->
+<rect x="330" y="492" width="580" height="50" rx="5" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.8"/>
+<text x="350" y="510" font-weight="600" fill="#0C447C">Stripe payment flow</text>
+<text x="350" y="526" fill="#185FA5">POST /orders/{id}/payment → create PaymentIntent → return client_secret → Stripe.js collects card (card never hits server)</text>
+<text x="350" y="538" fill="#185FA5">→ Stripe webhook payment_intent.succeeded → order.payment_status='paid' (NEVER poll — webhook is source of truth)</text>
+
+<!-- Reverb broadcast note -->
+<rect x="10" y="378" width="310" height="50" rx="5" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.8"/>
+<text x="30" y="396" font-weight="600" fill="#3C3489">WebSocket broadcasts (Reverb)</text>
+<text x="30" y="410" fill="#534AB7">Channel: tenant.{tid}.branch.{bid}.orders</text>
+<text x="30" y="422" fill="#534AB7">Events: NewOrderReceived · OrderStatusChanged · OrderModified</text>
+
+<line x1="330" y1="400" x2="320" y2="402" stroke="#534AB7" stroke-width="0.8" marker-end="url(#arr)"/>
+</svg>
