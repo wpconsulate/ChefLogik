@@ -1,8 +1,76 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+---
+
 # Restaurant Management SaaS — Claude Code Master Guide
 
 > **READ THIS ENTIRE FILE BEFORE WRITING ANY CODE.**
-> The mandatory discussion checklist in Section 2 must be completed first.
-> Document every decision in `decisions.md` before proceeding.
+> The mandatory discussion checklist in Section 2 has been completed — all decisions are in `decisions.md`.
+> Document any new decisions in `decisions.md` before proceeding.
+
+---
+
+## Current Project State
+
+**This repository is the documentation/planning repo. No application code exists here.**
+
+- All 21 architectural decisions are locked in `decisions.md`
+- Database schema is fully specified in `docs/03-database-schema.md` (with all DBA improvements applied)
+- API design is fully specified in `docs/04-api-design.md`
+- Application code lives in two separate repos:
+  - `cheflogik-api` — Laravel 12 backend (at `/api` locally, own git repo)
+  - `cheflogik-web` — React 18 frontend (at `/web` locally, own git repo)
+- The `/api` and `/web` directories are ignored by this repo's git
+
+**Before writing any code:** read `decisions.md` in full, then read the relevant module docs and skill files.
+
+---
+
+## Development Commands
+
+> Commands below apply to `cheflogik-api` (Laravel). Run from within the `/api` directory.
+
+### Laravel (Backend)
+```bash
+composer install                                    # install PHP dependencies
+php artisan migrate                                 # run migrations against main DB
+php artisan migrate --env=testing                   # run migrations against test DB
+php artisan db:seed                                 # seed permissions, system roles, subscription plans
+php artisan test                                    # run full test suite (real Postgres, not SQLite)
+php artisan test --filter TestClassName             # run a single test class
+php artisan test --filter TestClassName::method     # run a single test method
+./vendor/bin/pint                                   # PHP code style fixer (Laravel Pint)
+./vendor/bin/pint --test                            # check style without fixing
+php artisan queue:work rabbitmq --queue=critical    # start critical queue worker
+php artisan reverb:start                            # start WebSocket server (port 8080)
+```
+
+### Docker Compose (Application services only — DB/Redis/RabbitMQ are on shared infra)
+```bash
+docker compose up -d           # start app, workers, reverb
+docker compose down
+docker compose logs -f app     # tail application logs
+docker compose logs -f worker-critical
+```
+
+### React (Frontend — run from `/web` directory)
+```bash
+npm install
+npm run dev                    # Vite dev server
+npm run build                  # production build
+npm run test                   # Vitest
+npm run lint                   # ESLint
+```
+
+### Database setup (per developer, on shared infra)
+```bash
+# Create two databases on shared Postgres:
+# 1. cheflogik_<your_name>       — main development DB
+# 2. cheflogik_<your_name>_test  — test DB (reset between test runs)
+# Add both sets of credentials to .env (see .env.example)
+```
 
 ---
 

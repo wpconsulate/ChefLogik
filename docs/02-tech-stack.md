@@ -10,34 +10,46 @@
     "laravel/framework": "^12.0",
     "laravel/sanctum": "^4.0",
     "laravel/reverb": "^1.0",
-    "laravel/horizon": "^5.0",
-    "stancl/tenancy": "^3.0",
-    "spatie/laravel-permission": "NOT USED — custom permission system",
-    "stripe/stripe-php": "^13.0",
-    "twilio/sdk": "^8.0",
-    "sendgrid/sendgrid": "^8.0",
+    "vladimir-yuldashev/laravel-queue-rabbitmq": "^13.0",
+    "maxbanton/cwh": "^3.0",
     "league/flysystem-aws-s3-v3": "^3.0"
+  },
+  "require-dev": {
+    "spatie/laravel-ray": "^1.0"
   }
 }
 ```
 
-Note: spatie/laravel-permission is NOT used. The project has a custom permission system (see `docs/05-auth-roles.md`).
+**Decisions applied to packages:**
+- `stancl/tenancy` — DROPPED (Decision 1: manual Global Scope implementation)
+- `laravel/horizon` — DROPPED (Decision 10: RabbitMQ replaces Redis queue; use RabbitMQ management UI)
+- `spatie/laravel-permission` — NOT USED (custom permission system, see `docs/05-auth-roles.md`)
+- `stripe/stripe-php` — PENDING Decision 7 (payment gateway not confirmed)
+- `twilio/sdk` — PENDING Decision 8 (SMS provider not confirmed)
+- `sendgrid/sendgrid` — PENDING Decision 9 (email provider not confirmed)
 
 ### Directory structure (Laravel)
 ```
 app/
   Console/
     Commands/         ← Artisan commands (aggregation jobs, maintenance)
-  Events/             ← Domain events (OrderConfirmed, TableStateChanged, etc.)
+  Events/             ← Domain events (OrderConfirmed, ItemEightySixed, etc.)
   Exceptions/         ← Custom exception classes + Handler.php
   Http/
     Controllers/
       Api/V1/         ← All API controllers, one subfolder per module
-        Orders/
+        Auth/
+        Branches/
+        Staff/
         Menu/
+        Orders/
+        Kds/
         Reservations/
-        ...
-      Platform/       ← Platform-admin controllers (tenant management, etc.)
+        Events/
+        Inventory/
+        Customers/
+        Analytics/
+      Platform/       ← Platform-admin controllers (no TenantMiddleware)
     Middleware/
       TenantMiddleware.php      ← Resolves tenant from JWT, sets on request
       PermissionMiddleware.php  ← Checks permission slug against cached perms
@@ -45,50 +57,63 @@ app/
       EnsureCustomerAuth.php
       EnsurePlatformAdmin.php
     Requests/         ← Form Request classes, one per endpoint
-      Orders/
+      Auth/
+      Branches/
+      Staff/
       Menu/
+      Orders/
       ...
     Resources/        ← API Resources, one per model/response shape
-  Jobs/               ← Queued jobs
+  Broadcasting/       ← Reverb channel authorization classes (tenant isolation enforced)
+    OrderChannel.php
+    KdsChannel.php
+    TableChannel.php
+  Jobs/               ← Queued jobs dispatched to RabbitMQ
     Orders/
     Inventory/
     Analytics/        ← Aggregation jobs (hourly, daily, weekly, monthly)
-    Integrations/     ← Platform sync jobs (Uber Eats, DoorDash, Stripe webhook)
+    Integrations/     ← PENDING: Stripe/UberEats/DoorDash (Decisions 7/8/9)
   Listeners/          ← Event listeners
-  Models/             ← Eloquent models (all with TenantScope)
-  Policies/           ← Laravel Policies (use permission slugs, not role names)
+  Models/             ← Eloquent models (all tenant-scoped with HasTenantScope)
+  Policies/           ← Laravel Policies (permission slugs only, never role names)
   Repositories/       ← Repository pattern — one per major model
     Contracts/        ← Repository interfaces
   Services/           ← Business logic services
-    Orders/
+    Auth/
+    Branches/
+    Staff/
     Menu/
+    Orders/
     Inventory/
     Loyalty/
     Analytics/
-    Integrations/
-      StripeService.php
-      UberEatsService.php
-      DoorDashService.php
-      TwilioService.php
-      SendGridService.php
-  Enums/              ← PHP 8.1+ backed enums for all status fields
+    Integrations/     ← PENDING: StripeService, TwilioService, SendGridService
+  Scopes/             ← TenantScope.php
+  Traits/             ← HasTenantScope.php
+  DTOs/               ← readonly DTOs (CreateOrderDTO, etc.)
+  Enums/              ← PHP 8.3 backed enums for all status fields
 database/
-  migrations/         ← Chronological migrations
+  migrations/         ← Chronological, FK-safe order (56 files, see decisions.md)
   seeders/
-    PermissionSeeder.php    ← Seeds all permission slugs
-    SystemRoleSeeder.php    ← Seeds the 8 system roles with their permissions
+    PermissionSeeder.php        ← Seeds all ~60 permission slugs
+    SystemRoleSeeder.php        ← Seeds 8 system roles with permission assignments
+    SubscriptionPlanSeeder.php  ← Seeds Starter/Growth/Enterprise (all free for MVP)
     PlatformAdminSeeder.php
 config/
-  tenancy.php         ← stancl/tenancy config
-  permissions.php     ← Permission slug constants (the only place slugs are defined)
+  permissions.php     ← Permission slug constants (only place slugs are defined)
+  queue.php           ← RabbitMQ connection + 5 queue definitions (critical/high/default/analytics/low)
+  logging.php         ← CloudWatch channel config (maxbanton/cwh)
+  # tenancy.php       ← DROPPED (Decision 1: no stancl/tenancy package)
 routes/
-  api.php             ← Tenant-scoped API routes (/api/v1/)
+  api.php             ← Tenant-scoped staff routes (/api/v1/)
+  customer.php        ← Customer portal routes (/api/v1/customer/)
+  public.php          ← Public routes (/api/public/ — no auth)
   platform.php        ← Platform-admin routes (/api/platform/)
   channels.php        ← Reverb/broadcasting channel definitions
 tests/
-  Feature/            ← API endpoint tests (one per controller method)
+  Feature/            ← API endpoint tests (one class per controller)
   Unit/               ← Service and repository unit tests
-  TenantTestCase.php  ← Base test case that sets up tenant isolation for every test
+  TenantTestCase.php  ← Base test case: creates tenantA + tenantB, authenticates staffA
 ```
 
 ### Laravel conventions
@@ -190,13 +215,19 @@ class CreateOrderRequest extends FormRequest {
 ```
 
 ### Queue configuration
-- Driver: Redis (Laravel Horizon)
-- Queues (in priority order):
-  - `critical` — Stripe webhooks, 86 broadcasts, KDS updates
-  - `high` — Order status updates, platform sync (86 to Uber/DoorDash)
-  - `default` — Email/SMS notifications, customer profile updates
-  - `analytics` — Aggregation jobs (hourly, daily, weekly, monthly)
-  - `low` — Report generation, export jobs
+- Driver: **RabbitMQ** via `vladimir-yuldashev/laravel-queue-rabbitmq` (Decision 10)
+- Redis is NOT used for queues — Redis is cache only (permissions, sessions, rate limiting)
+- Separate worker container per queue group (Decision 10 — independent scaling, critical queue never starved)
+
+| Queue | Jobs | Worker container | Processes |
+|---|---|---|---|
+| `critical` | Stripe webhooks, 86 broadcasts, KDS updates | `worker-critical` | 3 |
+| `high` | Order status updates, platform sync | `worker-high` | 2 |
+| `default` | Email/SMS notifications, customer profile updates | `worker-default` | 2 |
+| `analytics` | Aggregation jobs (hourly, daily, weekly, monthly) | `worker-background` | 1 |
+| `low` | Report generation, export jobs | `worker-background` | 1 |
+
+All queues live within the `/cheflogik` RabbitMQ vhost. Messages persist to disk — jobs survive RabbitMQ restarts.
 
 ---
 

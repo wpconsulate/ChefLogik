@@ -3,9 +3,11 @@
 ## Base URLs
 
 ```
-/api/v1/          ← Tenant-scoped API (staff and customer endpoints)
+/api/v1/          ← Tenant-scoped API (staff endpoints)
+/api/v1/customer/ ← Customer portal endpoints (customer guard)
 /api/platform/    ← Platform-admin API (SaaS operator only)
-/api/v1/customer/ ← Customer portal endpoints (separate auth guard)
+/api/public/      ← Public endpoints (no auth, no tenant middleware)
+/api/health       ← Health check (no auth)
 ```
 
 ## Tenant Resolution
@@ -22,7 +24,8 @@ The `tenant_id` is NEVER accepted from the request body or URL parameters — it
 
 ```http
 Authorization: Bearer {sanctum_token}
-X-Branch-Id: {branch_uuid}    ← Required for branch-scoped endpoints
+X-Branch-Id: {branch_uuid}          ← Required for branch-scoped endpoints
+Idempotency-Key: {client-uuid}      ← Required for order + payment creation (prevents duplicates on retry)
 Accept: application/json
 Content-Type: application/json
 ```
@@ -45,19 +48,19 @@ DELETE /api/v1/orders/{id}         → destroy
 
 Nested resources (use sparingly, max 1 level deep):
 GET    /api/v1/orders/{id}/items   → order line items
-POST   /api/v1/orders/{id}/cancel  → action endpoints use verbs
 
 Action endpoints (when REST verbs don't fit):
 POST   /api/v1/orders/{id}/confirm
 POST   /api/v1/orders/{id}/cancel
 POST   /api/v1/tables/{id}/seat
 POST   /api/v1/tables/{id}/clear
-POST   /api/v1/menu-items/{id}/eighty-six
-POST   /api/v1/menu-items/{id}/restore
+POST   /api/v1/menu/items/{id}/eighty-six
+POST   /api/v1/menu/items/{id}/restore
 ```
 
 ## Pagination
 
+### Offset Pagination (default — use for most list endpoints)
 ```json
 GET /api/v1/orders?page=2&per_page=25&branch_id={uuid}&status=confirmed
 
@@ -80,16 +83,47 @@ GET /api/v1/orders?page=2&per_page=25&branch_id={uuid}&status=confirmed
 }
 ```
 
+### Cursor Pagination (high-volume append-only tables)
+Use for: `stock_movements`, `audit_log`, `loyalty_transactions`, `order_status_history`
+```json
+GET /api/v1/inventory/items/{id}/movements?cursor={cursor}&limit=50
+
+{
+  "data": [ ... ],
+  "meta": {
+    "limit": 50,
+    "has_more": true,
+    "next_cursor": "eyJpZCI6Ijg3NiJ9"
+  }
+}
+```
+
 ## Filtering and Sorting
 
 ```
 GET /api/v1/orders?branch_id={uuid}&status=confirmed&source=uber_eats
 GET /api/v1/orders?created_after=2026-01-01&created_before=2026-01-31
 GET /api/v1/orders?sort=created_at&direction=desc
-GET /api/v1/menu-items?category_id={uuid}&is_active=true
+GET /api/v1/menu/items?category_id={uuid}&is_active=true
 ```
 
 All filter parameters are validated in Form Request classes. Unknown filter params return 422.
+
+## Export Pattern
+
+Two patterns depending on dataset size:
+
+### Sync export (small, bounded datasets — e.g. payroll)
+```
+GET /api/v1/staff/payroll/export?date_from=2026-01-01&date_to=2026-01-31
+→ streams CSV directly, Content-Disposition: attachment
+```
+
+### Async export (large datasets — e.g. analytics, temperature logs)
+```
+POST /api/v1/analytics/reports/export   → { "job_id": "uuid" }
+GET  /api/v1/exports/{job_id}/status    → { "status": "processing|ready|failed", "url": "s3-url", "expires_at": "..." }
+```
 
 ## Error Response Schema
 
@@ -130,21 +164,25 @@ All filter parameters are validated in Form Request classes. Unknown filter para
 
 ## Rate Limiting
 
-Per-tenant rate limits (not per-user):
-- Standard tenant endpoints: 1000 requests / minute
-- Webhook endpoints: 500 requests / minute (Stripe, Uber Eats, DoorDash)
-- Export endpoints: 10 requests / minute
-- Analytics endpoints: 60 requests / minute
+Per-tenant rate limits enforced via Laravel's `ThrottleRequests` middleware with Redis driver.
+Limit key: `tenant:{tenant_id}:{route_group}`. Customer portal limits are per-customer.
 
-Limits enforced via Laravel's `ThrottleRequests` middleware with Redis driver. Limit key: `tenant:{tenant_id}:{route_group}`.
+| Route group | Limit |
+|---|---|
+| Standard tenant endpoints | 1000 req/min |
+| Webhook endpoints | 500 req/min |
+| Export endpoints | 10 req/min |
+| Analytics endpoints | 60 req/min |
+| Customer portal endpoints | 120 req/min per customer |
+| Public menu endpoint | 300 req/min per IP |
 
 ## Webhook Endpoints
 
 ```
-POST /api/webhooks/stripe              ← Stripe events
-POST /api/webhooks/uber-eats           ← Uber Eats order events
-POST /api/webhooks/doordash            ← DoorDash order events
-POST /api/webhooks/twilio              ← Twilio delivery receipts
+POST /api/webhooks/stripe     ← ⚠️ Decision 7 pending (payment gateway not confirmed)
+POST /api/webhooks/uber-eats  ← ⚠️ Phase 3 integration — not built in Phase 1
+POST /api/webhooks/doordash   ← ⚠️ Phase 3 integration — not built in Phase 1
+POST /api/webhooks/twilio     ← ⚠️ Decision 8 pending (SMS provider not confirmed)
 ```
 
 Webhook endpoints are:
@@ -153,76 +191,460 @@ Webhook endpoints are:
 - Must return 200 within 5 seconds (business logic dispatched to queue)
 - Use Redis to store processed event IDs for idempotency (TTL 72h)
 
+## Health Check
+
+```
+GET /api/health   → { "status": "ok", "version": "1.0", "timestamp": "2026-04-07T10:00:00Z" }
+```
+
+No auth required. Used by Docker health checks and load balancer probes.
+
+---
+
 ## Key Endpoint Groups
 
-### Auth (`/api/v1/auth/`)
+### Auth (`/api/v1/auth/` and `/api/platform/auth/`)
 ```
-POST   /api/v1/auth/login                    → staff login
-POST   /api/v1/auth/logout
-POST   /api/v1/auth/refresh
-GET    /api/v1/auth/me                       → current user + permissions array
+-- Staff auth
+POST   /api/v1/auth/login                    → staff login, returns 8-hour token
+POST   /api/v1/auth/logout                   → revoke current token
+POST   /api/v1/auth/refresh                  → exchange expiring token for a new one
+GET    /api/v1/auth/me                       → current user + resolved permissions array
+POST   /api/v1/auth/forgot-password          → send password reset email
+POST   /api/v1/auth/reset-password           → validate reset token + set new password
 
-POST   /api/v1/auth/customer/login           → customer portal login
-POST   /api/v1/auth/customer/register
+-- Customer auth (platform-level, Decision 3)
+POST   /api/v1/auth/customer/login           → customer login, returns platform-level token
+POST   /api/v1/auth/customer/register        → new customer registration
+POST   /api/v1/auth/customer/logout
+POST   /api/v1/auth/customer/refresh
+GET    /api/v1/auth/customer/restaurants     → list restaurants customer has visited (customer_tenant_profiles)
+POST   /api/v1/auth/customer/select          → select restaurant context, returns tenant-scoped token
+POST   /api/v1/auth/customer/forgot-password → email or SMS OTP per communication_prefs
+POST   /api/v1/auth/customer/reset-password  → validate token/OTP + set new password
+
+-- Platform admin auth
+POST   /api/platform/auth/login              → platform admin login, no expiry token
+POST   /api/platform/auth/logout             → explicit token revocation
 ```
 
-### Orders (`/api/v1/orders/`)
+### Branches (`/api/v1/branches/`)
 ```
-GET    /api/v1/orders                        → list (branch-scoped)
-POST   /api/v1/orders                        → create
-GET    /api/v1/orders/{id}
-PATCH  /api/v1/orders/{id}
-POST   /api/v1/orders/{id}/confirm
-POST   /api/v1/orders/{id}/cancel
-POST   /api/v1/orders/{id}/items             → add item to open order
-DELETE /api/v1/orders/{id}/items/{item_id}
-POST   /api/v1/orders/{id}/payment
-POST   /api/v1/orders/{id}/refund
-POST   /api/v1/orders/{id}/split-bill
+GET    /api/v1/branches                      → list tenant's branches
+POST   /api/v1/branches                      → create branch
+GET    /api/v1/branches/{id}
+PATCH  /api/v1/branches/{id}
+DELETE /api/v1/branches/{id}
+GET    /api/v1/branches/{id}/hours           → list special operating hours
+POST   /api/v1/branches/{id}/hours           → add special hours override
+PATCH  /api/v1/branches/{id}/hours/{date}    → update a specific date override
+DELETE /api/v1/branches/{id}/hours/{date}    → remove a specific date override
+```
+
+### Staff (`/api/v1/staff/`)
+```
+-- Staff members
+GET    /api/v1/staff                         → list staff (scoped by caller's branch access)
+POST   /api/v1/staff                         → onboard new staff member
+GET    /api/v1/staff/{id}
+PATCH  /api/v1/staff/{id}
+POST   /api/v1/staff/{id}/offboard           → suspend → revoke tokens → inactive
+POST   /api/v1/staff/{id}/documents          → upload document (S3)
+DELETE /api/v1/staff/{id}/documents/{type}   → remove document
+
+-- Roles (dynamic role builder)
+GET    /api/v1/staff/roles                   → list tenant roles (system + custom)
+POST   /api/v1/staff/roles                   → create custom role
+GET    /api/v1/staff/roles/{id}
+PATCH  /api/v1/staff/roles/{id}              → only non-system roles; privilege escalation enforced
+DELETE /api/v1/staff/roles/{id}              → only if no active users assigned
+GET    /api/v1/staff/permissions             → full slug list grouped by module
+
+-- Role assignment
+POST   /api/v1/staff/{id}/roles              → assign role + branch_ids to staff member
+DELETE /api/v1/staff/{id}/roles/{role_id}    → remove role assignment
+
+-- Shifts
+GET    /api/v1/staff/shifts                  → list shifts (branch_id + date range required)
+POST   /api/v1/staff/shifts                  → create shift
+GET    /api/v1/staff/shifts/{id}
+PATCH  /api/v1/staff/shifts/{id}
+DELETE /api/v1/staff/shifts/{id}
+POST   /api/v1/staff/shifts/{id}/claim       → staff claims an open shift
+POST   /api/v1/staff/shifts/publish          → publish all draft shifts for a branch + week
+
+-- Attendance & time tracking
+POST   /api/v1/staff/clock-in               → staff clock-in action
+POST   /api/v1/staff/clock-out              → staff clock-out action
+GET    /api/v1/staff/attendance              → list records (branch_id + date range required)
+GET    /api/v1/staff/attendance/{id}
+
+-- Payroll (sync export)
+GET    /api/v1/staff/payroll/export          → CSV stream; requires date_from + date_to params
 ```
 
 ### Menu (`/api/v1/menu/`)
 ```
-GET    /api/v1/menu/categories
+-- Categories
+GET    /api/v1/menu/categories               → list (supports parent_id filter for sub-categories)
 POST   /api/v1/menu/categories
+GET    /api/v1/menu/categories/{id}
+PATCH  /api/v1/menu/categories/{id}
+DELETE /api/v1/menu/categories/{id}
+
+-- Items
 GET    /api/v1/menu/items
 POST   /api/v1/menu/items
 GET    /api/v1/menu/items/{id}
 PATCH  /api/v1/menu/items/{id}
-POST   /api/v1/menu/items/{id}/eighty-six
-POST   /api/v1/menu/items/{id}/restore
+DELETE /api/v1/menu/items/{id}               → requires menu.delete_master permission
+POST   /api/v1/menu/items/{id}/eighty-six    → manual 86 (trigger_type='manual')
+POST   /api/v1/menu/items/{id}/restore       → checks trigger_type; inventory-linked requires manual confirmation
+GET    /api/v1/menu/items/{id}/86-history    → eighty_six_log entries for this item
+
+-- Modifier groups & modifiers
+GET    /api/v1/menu/modifier-groups
+POST   /api/v1/menu/modifier-groups
+GET    /api/v1/menu/modifier-groups/{id}
+PATCH  /api/v1/menu/modifier-groups/{id}
+DELETE /api/v1/menu/modifier-groups/{id}
+GET    /api/v1/menu/modifier-groups/{id}/modifiers
+POST   /api/v1/menu/modifier-groups/{id}/modifiers
+PATCH  /api/v1/menu/modifier-groups/{id}/modifiers/{modifier_id}
+DELETE /api/v1/menu/modifier-groups/{id}/modifiers/{modifier_id}
+
+-- Branch overrides
 GET    /api/v1/menu/branch-overrides/{branch_id}
 PUT    /api/v1/menu/branch-overrides/{branch_id}/{item_id}
-POST   /api/v1/menu/sync                     → trigger platform sync
+
+-- Platform sync (⚠️ Phase 3 — Uber Eats + DoorDash integrations)
+POST   /api/v1/menu/sync                     → trigger full platform sync
+```
+
+### Public Menu (`/api/public/`)
+```
+-- No auth required. QR code points here.
+GET    /api/public/menu/{branch_slug}        → full menu with live 86 status + dietary flags
+                                               WebSocket channel: tenant.{tid}.branch.{bid}.orders
+                                               (filtered by customer dietary prefs if customer token provided)
+```
+
+### Orders (`/api/v1/orders/`)
+```
+-- Core CRUD
+GET    /api/v1/orders                        → list (branch-scoped, supports status/source/date filters)
+POST   /api/v1/orders                        → create (requires Idempotency-Key header)
+GET    /api/v1/orders/{id}
+PATCH  /api/v1/orders/{id}                   → modify before preparation only
+
+-- Status lifecycle (9 stages)
+POST   /api/v1/orders/{id}/confirm           → new → confirmed (triggers stock deduction job)
+POST   /api/v1/orders/{id}/prepare           → confirmed → preparing
+POST   /api/v1/orders/{id}/ready             → preparing → ready
+POST   /api/v1/orders/{id}/out-for-delivery  → ready → out_for_delivery (delivery orders only)
+POST   /api/v1/orders/{id}/deliver           → out_for_delivery → delivered
+POST   /api/v1/orders/{id}/serve             → ready → served (dine-in only)
+POST   /api/v1/orders/{id}/settle            → served → bill_settled
+POST   /api/v1/orders/{id}/cancel            → any non-final stage → cancelled (feeds RefundEngine)
+GET    /api/v1/orders/{id}/status-history    → full transition log from order_status_history
+
+-- Line items
+GET    /api/v1/orders/{id}/items
+POST   /api/v1/orders/{id}/items             → add item to open order
+PATCH  /api/v1/orders/{id}/items/{item_id}   → modify item (before preparation only)
+DELETE /api/v1/orders/{id}/items/{item_id}
+
+-- Payments & refunds
+POST   /api/v1/orders/{id}/payment           → create PaymentIntent (requires Idempotency-Key)
+POST   /api/v1/orders/{id}/refund            → feeds centralised RefundEngine
+POST   /api/v1/orders/{id}/split-bill        → split into multiple payment intents
+
+-- Delivery
+GET    /api/v1/delivery-zones                → list branch delivery zones
+POST   /api/v1/delivery-zones               → create zone
+GET    /api/v1/delivery-zones/{id}
+PATCH  /api/v1/delivery-zones/{id}
+DELETE /api/v1/delivery-zones/{id}
+POST   /api/v1/delivery-zones/{id}/pause     → pause zone (status='paused')
+POST   /api/v1/delivery-zones/{id}/resume
+
+-- Platform pause (peak hour throttle)
+POST   /api/v1/orders/pause-platforms        → manual pause all delivery platforms for a branch
+POST   /api/v1/orders/resume-platforms
+
+-- Promo codes
+GET    /api/v1/promo-codes
+POST   /api/v1/promo-codes
+GET    /api/v1/promo-codes/{id}
+PATCH  /api/v1/promo-codes/{id}
+DELETE /api/v1/promo-codes/{id}
+POST   /api/v1/promo-codes/validate          → validate code at checkout, returns discount details
+
+-- Disputes
+GET    /api/v1/disputes                      → list disputes (branch-scoped)
+GET    /api/v1/disputes/{id}
+POST   /api/v1/disputes/{id}/respond         → accept/partial/dispute with evidence
+```
+
+### KDS — Kitchen Display System (`/api/v1/kds/`)
+```
+GET    /api/v1/kds/tickets                        → live tickets for a station (branch + station filter)
+GET    /api/v1/kds/tickets/{id}
+POST   /api/v1/kds/tickets/{id}/prepare           → mark item as prepared (requires kds.mark_prepared)
+POST   /api/v1/kds/tickets/{id}/acknowledge-allergen
+                                                  → ⚠️ hard gate: must happen within 30s of ticket arrival
+                                                  → logged immutably, cannot be reversed
+                                                  → requires kds.acknowledge_allergen permission
 ```
 
 ### Reservations (`/api/v1/reservations/`)
 ```
-GET    /api/v1/reservations
-POST   /api/v1/reservations
+-- Reservations
+GET    /api/v1/reservations                  → list (branch_id + date range filter)
+POST   /api/v1/reservations                  → create (triggers 24h + 2h reminder jobs)
 GET    /api/v1/reservations/{id}
 PATCH  /api/v1/reservations/{id}
-POST   /api/v1/reservations/{id}/arrive
-POST   /api/v1/reservations/{id}/seat
-POST   /api/v1/reservations/{id}/cancel
+POST   /api/v1/reservations/{id}/arrive      → confirmed → arrived
+POST   /api/v1/reservations/{id}/seat        → arrived → seated (links to table)
+POST   /api/v1/reservations/{id}/complete    → seated → completed
+POST   /api/v1/reservations/{id}/no-show     → increments customer no_show_count
+POST   /api/v1/reservations/{id}/cancel      → triggers refund if deposit paid
+
+-- Availability
+GET    /api/v1/reservations/availability     → available tables for date/time/party_size
+
+-- Floor plan
 GET    /api/v1/floor-plan/{branch_id}
-PATCH  /api/v1/floor-plan/{branch_id}
-POST   /api/v1/tables/{id}/seat
-POST   /api/v1/tables/{id}/clear
-GET    /api/v1/waitlist/{branch_id}
-POST   /api/v1/waitlist
-POST   /api/v1/waitlist/{id}/seat
+PATCH  /api/v1/floor-plan/{branch_id}        → update layout_data (requires reservations.edit_floor_plan)
+
+-- Tables
+GET    /api/v1/tables                        → list tables (branch-scoped)
+POST   /api/v1/tables                        → create table
+GET    /api/v1/tables/{id}
+PATCH  /api/v1/tables/{id}
+DELETE /api/v1/tables/{id}
+POST   /api/v1/tables/{id}/seat              → free/reserved → occupied
+POST   /api/v1/tables/{id}/clear            → needs_cleaning → free
+POST   /api/v1/tables/{id}/block            → → blocked (requires reservations.block_tables)
+POST   /api/v1/tables/{id}/unblock
+
+-- Waitlist
+GET    /api/v1/waitlist                      → active waitlist for a branch
+POST   /api/v1/waitlist                      → add to waitlist (walk-in profile match at 500ms SLA)
+GET    /api/v1/waitlist/{id}
+POST   /api/v1/waitlist/{id}/seat            → seat from waitlist → links to table
+POST   /api/v1/waitlist/{id}/remove          → mark as left/expired
 ```
 
-### Platform admin (`/api/platform/`)
+### Events (`/api/v1/events/`)
 ```
+-- Enquiry pipeline
+GET    /api/v1/events                        → list (supports status filter)
+POST   /api/v1/events                        → create enquiry
+GET    /api/v1/events/{id}
+PATCH  /api/v1/events/{id}
+POST   /api/v1/events/{id}/send-proposal     → enquiry → proposal
+POST   /api/v1/events/{id}/confirm           → proposal → confirmed (triggers deposit collection + task generation)
+POST   /api/v1/events/{id}/cancel            → with cancellation policy (non-refundable fee retained)
+POST   /api/v1/events/{id}/mark-lost         → requires reason: price|date_unavailable|competitor|no_response|other
+
+-- Phase transitions
+POST   /api/v1/events/{id}/pre-event         → confirmed → pre_event
+POST   /api/v1/events/{id}/day-of            → pre_event → day_of (pushes run sheet to host)
+POST   /api/v1/events/{id}/complete          → day_of → completed
+
+-- Pre-event tasks
+GET    /api/v1/events/{id}/tasks
+POST   /api/v1/events/{id}/tasks
+PATCH  /api/v1/events/{id}/tasks/{task_id}   → mark complete / reassign
+
+-- Run sheet
+GET    /api/v1/events/{id}/run-sheet
+GET    /api/v1/events/{id}/run-sheet/export  → async PDF export
+
+-- Orders linked to event
+GET    /api/v1/events/{id}/orders
+
+-- Payment & deposits
+POST   /api/v1/events/{id}/payment           → collect deposit via Stripe PaymentIntent
+
+-- Event spaces
+GET    /api/v1/events/spaces
+POST   /api/v1/events/spaces
+GET    /api/v1/events/spaces/{id}
+PATCH  /api/v1/events/spaces/{id}
+DELETE /api/v1/events/spaces/{id}
+
+-- Event packages
+GET    /api/v1/events/packages
+POST   /api/v1/events/packages
+GET    /api/v1/events/packages/{id}
+PATCH  /api/v1/events/packages/{id}
+DELETE /api/v1/events/packages/{id}
+
+-- Corporate accounts
+GET    /api/v1/events/corporate-accounts
+POST   /api/v1/events/corporate-accounts
+GET    /api/v1/events/corporate-accounts/{id}
+PATCH  /api/v1/events/corporate-accounts/{id}
+POST   /api/v1/events/corporate-accounts/{id}/hold    → status → on_hold
+POST   /api/v1/events/corporate-accounts/{id}/reactivate
+```
+
+### Inventory (`/api/v1/inventory/`)
+```
+-- Inventory items
+GET    /api/v1/inventory/items               → list (branch-scoped, supports category/low-stock filters)
+POST   /api/v1/inventory/items
+GET    /api/v1/inventory/items/{id}
+PATCH  /api/v1/inventory/items/{id}
+DELETE /api/v1/inventory/items/{id}
+POST   /api/v1/inventory/items/{id}/adjust   → manual stock adjustment (logged to stock_movements)
+POST   /api/v1/inventory/items/{id}/transfer → transfer stock between branches
+GET    /api/v1/inventory/items/{id}/movements → cursor-paginated stock movement history
+
+-- Recipes
+GET    /api/v1/inventory/recipes
+POST   /api/v1/inventory/recipes
+GET    /api/v1/inventory/recipes/{id}
+PATCH  /api/v1/inventory/recipes/{id}
+DELETE /api/v1/inventory/recipes/{id}
+POST   /api/v1/inventory/recipes/{id}/submit  → draft → pending_approval
+POST   /api/v1/inventory/recipes/{id}/approve → pending_approval → approved (Owner/Branch Manager)
+POST   /api/v1/inventory/recipes/{id}/archive → approved → archived
+
+-- Suppliers
+GET    /api/v1/inventory/suppliers
+POST   /api/v1/inventory/suppliers
+GET    /api/v1/inventory/suppliers/{id}
+PATCH  /api/v1/inventory/suppliers/{id}
+DELETE /api/v1/inventory/suppliers/{id}
+
+-- Purchase orders
+GET    /api/v1/inventory/purchase-orders
+POST   /api/v1/inventory/purchase-orders
+GET    /api/v1/inventory/purchase-orders/{id}
+PATCH  /api/v1/inventory/purchase-orders/{id}
+POST   /api/v1/inventory/purchase-orders/{id}/send    → draft → sent (dispatched to supplier)
+POST   /api/v1/inventory/purchase-orders/{id}/cancel
+
+-- Goods received notes (GRN)
+GET    /api/v1/inventory/grn
+POST   /api/v1/inventory/grn                 → create GRN against a PO or ad-hoc
+GET    /api/v1/inventory/grn/{id}
+POST   /api/v1/inventory/grn/{id}/receive    → confirm receipt → triggers WAC recalculation + stock_movements INSERT
+
+-- Waste logging
+GET    /api/v1/inventory/waste
+POST   /api/v1/inventory/waste               → log waste event (snaps cost_at_wac at log time)
+
+-- Stocktakes & period close
+GET    /api/v1/inventory/stocktakes
+POST   /api/v1/inventory/stocktakes          → start new stocktake
+GET    /api/v1/inventory/stocktakes/{id}
+PATCH  /api/v1/inventory/stocktakes/{id}     → update counts during stocktake
+POST   /api/v1/inventory/stocktakes/{id}/complete → in_progress → completed (calculates variance)
+POST   /api/v1/inventory/stocktakes/{id}/lock    → completed → locked (period close, Owner only)
+
+-- Temperature log (food safety — 7yr retention)
+GET    /api/v1/inventory/temperature-log/export  → async PDF/CSV export for inspections
+```
+
+### Customers — Staff-Facing (`/api/v1/customers/`)
+```
+-- Profile management
+GET    /api/v1/customers                     → search by phone/email/name (tenant-scoped)
+POST   /api/v1/customers                     → create + enrol (auto-creates customer_tenant_profiles)
+GET    /api/v1/customers/{id}
+PATCH  /api/v1/customers/{id}
+POST   /api/v1/customers/merge               → merge duplicate profiles (Owner/Manager, logged, reversible 30d)
+
+-- Loyalty
+GET    /api/v1/customers/{id}/loyalty        → points balance, tier, transaction history (cursor-paginated)
+POST   /api/v1/customers/{id}/loyalty/adjust → manual points adjustment (logged to loyalty_transactions)
+
+-- History
+GET    /api/v1/customers/{id}/orders         → order history for this tenant
+GET    /api/v1/customers/{id}/reservations   → reservation history for this tenant
+
+-- GDPR
+POST   /api/v1/customers/{id}/gdpr/erasure   → initiate erasure process (14-day window)
+GET    /api/v1/customers/{id}/gdpr/export    → async data export
+
+-- Campaigns
+GET    /api/v1/customers/campaigns
+POST   /api/v1/customers/campaigns
+GET    /api/v1/customers/campaigns/{id}
+PATCH  /api/v1/customers/campaigns/{id}
+POST   /api/v1/customers/campaigns/{id}/cancel
+```
+
+### Customer Portal — Customer-Facing (`/api/v1/customer/`)
+```
+-- Profile
+GET    /api/v1/customer/profile
+PATCH  /api/v1/customer/profile
+
+-- Loyalty
+GET    /api/v1/customer/loyalty              → balance, tier, points history (cursor-paginated)
+POST   /api/v1/customer/loyalty/redeem       → redeem points (multiples of 100, min 100)
+
+-- History
+GET    /api/v1/customer/bookings             → reservation history for selected restaurant
+GET    /api/v1/customer/orders               → order history for selected restaurant
+
+-- GDPR self-service
+POST   /api/v1/customer/gdpr/erasure-request → initiates 14-day confirmation window
+GET    /api/v1/customer/gdpr/data-export     → async GDPR data portability export
+```
+
+### Analytics (`/api/v1/analytics/`)
+```
+-- Role-gated dashboards
+GET    /api/v1/analytics/owner-dashboard     → requires analytics.owner_dashboard
+GET    /api/v1/analytics/branch-dashboard    → requires analytics.branch_dashboard
+GET    /api/v1/analytics/kitchen-dashboard   → requires analytics.kitchen_dashboard
+GET    /api/v1/analytics/events-dashboard    → requires analytics.events_dashboard
+GET    /api/v1/analytics/customer-dashboard  → requires analytics.customer_dashboard
+
+-- Reports
+GET    /api/v1/analytics/revenue             → date range, channel breakdown
+GET    /api/v1/analytics/dishes              → dish performance + menu engineering matrix
+GET    /api/v1/analytics/customers           → RFM segments, CLV, churn risk scores
+GET    /api/v1/analytics/inventory           → COGS, food cost %, waste cost
+GET    /api/v1/analytics/staff               → labour cost %, aggregate performance (no individual PII)
+GET    /api/v1/analytics/tax-report          → VAT/GST report by tax category per period
+
+-- Audit log
+GET    /api/v1/analytics/audit-log           → cursor-paginated, requires analytics.audit_log
+
+-- Exports (async pattern)
+POST   /api/v1/analytics/reports/export      → submits async export job → { job_id }
+GET    /api/v1/exports/{job_id}/status       → { status, url, expires_at }
+
+-- Period close (Owner only)
+POST   /api/v1/analytics/period-close        → requires completed stocktake for the period
+```
+
+### Platform Admin (`/api/platform/`)
+```
+-- Auth
+POST   /api/platform/auth/login
+POST   /api/platform/auth/logout
+
+-- Tenant management
 GET    /api/platform/tenants
 POST   /api/platform/tenants
 GET    /api/platform/tenants/{id}
 PATCH  /api/platform/tenants/{id}
 POST   /api/platform/tenants/{id}/suspend
-GET    /api/platform/subscriptions
+POST   /api/platform/tenants/{id}/reactivate
+
+-- Subscription plans
+GET    /api/platform/plans
 POST   /api/platform/plans
+PATCH  /api/platform/plans/{id}
+POST   /api/platform/tenants/{id}/change-plan
 ```
 
 ## Broadcasting Auth
@@ -233,5 +655,13 @@ POST   /api/v1/broadcasting/auth     ← Reverb channel authorisation
 
 Private channel authorisation checks:
 - The user's token is valid
-- The channel's tenant_id matches the user's tenant_id
-- The channel's branch_id is in the user's allowed branch_ids
+- The channel's `tenant_id` matches the user's `tenant_id`
+- The channel's `branch_id` is in the user's allowed `branch_ids`
+
+WebSocket channels:
+```
+tenant.{tenantId}.branch.{branchId}.orders   → order status updates, new orders
+tenant.{tenantId}.branch.{branchId}.tables   → table state changes (3s SLA)
+tenant.{tenantId}.branch.{branchId}.kds      → KDS ticket updates, allergen alerts
+tenant.{tenantId}.alerts                     → manager-level alerts (86 events, churn risk, overdue tasks)
+```

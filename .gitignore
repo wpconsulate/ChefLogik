@@ -1,3 +1,7 @@
+# Separate repos — each has its own git history (Decision 6)
+/api
+/web
+
 .vscode
 .claude
 .idea
