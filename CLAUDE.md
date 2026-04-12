@@ -8,6 +8,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 > **READ THIS ENTIRE FILE BEFORE WRITING ANY CODE.**
 > The mandatory discussion checklist in Section 2 has been completed — all decisions are in `decisions.md`.
+
+> **CRITICAL OPERATING RULE: DO NOT MAKE ANY DECISIONS WITHOUT CONSULTING THE USER FIRST.**
+> This includes (but is not limited to): switching cache drivers, changing test infrastructure, adding new dependencies, changing middleware order, creating new config files, or any architectural choice not explicitly requested. Propose the change and wait for approval before acting.
 > Document any new decisions in `decisions.md` before proceeding.
 
 ---
@@ -91,60 +94,36 @@ All requirements have been fully documented across 12 requirement documents. The
 
 ---
 
-## 2. MANDATORY PRE-CODE DISCUSSION CHECKLIST
+## 2. Key Architectural Decisions
 
-**Do not scaffold, do not create migrations, do not write any application code until all 6 discussions below are completed and documented in `decisions.md`.**
+All 21 decisions are locked in `decisions.md`. The non-obvious ones that affect day-to-day code are summarised here.
 
-Raise each topic with the developer. Record the decision. Then proceed.
+### Tenancy (Decision 1)
+Single database, `tenant_id` on every table. **Manual** `TenantScope` + `HasTenantScope` trait — `stancl/tenancy` is **not used**. Platform-admin bypass: `withoutGlobalScope(TenantScope::class)` only in `Platform/` controllers.
 
-### Discussion 1 — Tenancy strategy ⚠️ MOST CRITICAL
-Three options exist:
-- **Option A** (recommended MVP): Single database, `tenant_id` column on every table, Laravel Global Scope on every Eloquent model. Use `stancl/tenancy` v3 in single-db mode, or implement manually.
-- **Option B**: Schema-per-tenant in Postgres (each tenant gets their own Postgres schema). Better isolation. More complex migrations. `stancl/tenancy` supports this.
-- **Option C**: Database-per-tenant. Maximum isolation. Complex Kubernetes ops. Not recommended for MVP.
+### Customer auth (Decision 3)
+Customers are platform-level (no `tenant_id` on `customer_profiles`). After login, customer selects a restaurant and receives a tenant-scoped token. `customer_tenant_profiles` holds per-tenant loyalty data.
 
-**Questions to confirm:**
-- Which option?
-- If Option A: will we use `stancl/tenancy` package or a manual Global Scope implementation?
-- How do we handle the platform-admin queries that must bypass tenant scoping?
+### Queue driver (Decision 10)
+**RabbitMQ** for all queues via `vladimir-yuldashev/laravel-queue-rabbitmq`. Redis is cache-only. Laravel Horizon is **not used** — use the RabbitMQ management UI. Five queues: `critical`, `high`, `default`, `analytics`, `low`.
 
-### Discussion 2 — SaaS billing and subscription plans
-The platform needs to bill tenants. Options:
-- Stripe Billing with subscription plans (Starter/Growth/Enterprise)
-- Manual invoicing for MVP, Stripe Billing later
-- Should plan tier restrict features (e.g. Starter = analytics read-only, Growth = full analytics)?
-- Does a `subscription_plans` table exist in Phase 1 or is it added later?
+### Roles (Decision 4)
+Full dynamic role system in Phase 1. Tables: `permissions`, `roles`, `role_permissions`, `user_roles`. 8 system roles seeded. No `spatie/laravel-permission` — custom implementation. Permission slugs are the only valid authorisation mechanism (no role-name checks).
 
-### Discussion 3 — Customer auth model ⚠️ UNRESOLVED
-**This is an open architectural question — resolve with developer before building the customer auth guard.**
+### Billing (Decision 2)
+Manual billing for MVP. `subscription_plans` table exists with Starter/Growth/Enterprise (all free, `price_monthly = 0`). Stripe Billing deferred.
 
-Option A: Customers have one platform-level account. They log in once and can see loyalty balances across multiple restaurants they've visited. Cross-tenant customer data must be handled with extreme care.
+### Infrastructure (Decision 5 & 11)
+Docker Compose for app services only. Postgres, Redis, RabbitMQ are on **shared developer infra** — not in Docker Compose. Kubernetes/Helm/Terraform deferred to Phase 3.
 
-Option B: Each tenant has its own customer auth. A customer who visits two restaurants has two separate accounts. Simpler isolation, but worse UX.
+### Pending decisions — these block specific work
+| Decision | What it blocks |
+|---|---|
+| **Decision 7** — Payment gateway (Stripe not yet confirmed) | `order_payments`, refund flow, events deposits, Stripe webhooks |
+| **Decision 8** — SMS provider (Twilio not yet confirmed) | Reservation reminders, customer OTP reset, loyalty campaign SMS |
+| **Decision 9** — Email provider (SendGrid not yet confirmed) | Staff/customer password reset email, booking confirmations |
 
-This decision affects the customer auth guard, the customer profile schema, JWT scoping for customers, and the React routing for the customer-facing portal.
-
-### Discussion 4 — Dynamic roles implementation timing
-System roles (Owner, Branch Manager, etc.) are pre-seeded and always available. Dynamic custom roles (tenant creates additional roles with custom permissions) are in scope.
-
-**Question:** Build the dynamic role builder in Phase 1 alongside the base auth system, or seed system roles as static data in Phase 1 and add the dynamic builder in Phase 2?
-
-Recommendation: Build the `permissions`, `roles`, and `role_permissions` tables from day one (avoids a painful refactor), but expose the UI for creating custom roles in Phase 2.
-
-### Discussion 5 — Kubernetes/infrastructure scope
-**Question:** What does Claude Code scaffold for infrastructure?
-- Option A: Full Terraform + Helm charts + Kubernetes manifests as a parallel workstream
-- Option B: `docker-compose.yml` for local development + application code only. Infrastructure is handled separately.
-- Option C: Dockerfile per service + a basic Helm chart skeleton, but no Terraform
-
-See `docs/07-infrastructure.md` for the intended Kubernetes architecture.
-
-### Discussion 6 — Monorepo vs separate repos
-**Question:** Single monorepo (Laravel API + React frontend in one repo) or two separate repos?
-
-Given Kubernetes + Helm with separate Docker images, two repos is the more natural choice. But a monorepo with separate `api/` and `web/` directories simplifies cross-cutting changes during active development.
-
-Confirm before `git init`.
+Do not implement any of the blocked work until the relevant decision is recorded in `decisions.md`.
 
 ---
 
@@ -154,21 +133,22 @@ Confirm before `git init`.
 |---|---|
 | Backend framework | Laravel 12, PHP 8.3 |
 | Database | PostgreSQL 16 |
-| Cache / queues | Redis 7 |
+| Cache | Redis 7 (cache only — NOT used for queues) |
+| Queues | RabbitMQ 3 via `vladimir-yuldashev/laravel-queue-rabbitmq` |
 | Real-time | Laravel Reverb (self-hosted WebSocket) |
 | Frontend framework | React 18, TypeScript (strict mode) |
 | Frontend state | MobX-State-Tree (MST) |
 | Auth | Laravel Sanctum (multiple guards) |
-| Payments | Stripe (Payments, Terminal, Webhooks, Refunds) |
+| Payments | Stripe — **PENDING Decision 7** |
 | Delivery platforms | Uber Eats API, DoorDash API |
-| SMS | Twilio |
-| Email | SendGrid |
-| Queue driver | Redis (Laravel Horizon) |
-| Storage | S3-compatible (photos, exports, receipts) |
+| SMS | Twilio — **PENDING Decision 8** |
+| Email | SendGrid — **PENDING Decision 9** |
+| Storage | AWS S3 (`league/flysystem-aws-s3-v3`) |
+| Logging | AWS CloudWatch (`maxbanton/cwh`) |
 | Container | Docker |
-| Orchestration | Kubernetes + Helm |
-| Infrastructure as code | Terraform |
-| Package (tenancy) | stancl/tenancy v3 (confirm in Discussion 1) |
+| Orchestration | Kubernetes + Helm (Phase 3) |
+| Infrastructure as code | Terraform (Phase 3) |
+| Tenancy | Manual `TenantScope` + `HasTenantScope` trait (no stancl/tenancy) |
 
 **See `docs/02-tech-stack.md` for full conventions, folder structure, and coding standards.**
 
@@ -177,8 +157,8 @@ Confirm before `git init`.
 ## 4. Navigation Guide — Read These Files
 
 ### Before writing any code
-1. This file (`CLAUDE.md`) — complete the discussion checklist
-2. `decisions.md` — document every decision
+1. This file (`CLAUDE.md`) — understand the decisions summary in Section 2
+2. `decisions.md` — read in full; record any new decisions here before proceeding
 3. `docs/01-project-overview.md` — business context and non-negotiable rules
 4. `docs/02-tech-stack.md` — Laravel/React conventions and folder structure
 5. `docs/03-database-schema.md` — all tables, columns, indexes
