@@ -1,71 +1,96 @@
 # ChefLogik — Next Steps
 
 ## Current State
-- 65 tests passing
-- Phase 1 Foundation: ~80% complete
+- **81 tests passing**
+- **Phase 1 Foundation: COMPLETE** ✓
 - Phase 2 modules: not started
 
 ---
 
-## Phase 1 — Remaining (do these first)
+## Phase 1 — COMPLETE ✓
 
-### 1. Orders & Deliveries ← START HERE
-**Why:** Everything else in Phase 1 (Reverb, KDS, loyalty) depends on orders existing.
+All Phase 1 deliverables are done and tested:
 
-**What it achieves:** The core revenue-generating flow. Staff can receive, manage, and fulfil orders across all 7 channels. Kitchen gets tickets. Customers get receipts.
-
-**Scope:**
-- 7 order channels: `dine_in_pos`, `dine_in_qr`, `takeaway_counter`, `takeaway_phone`, `online`, `uber_eats`, `doordash`
-- 9-stage lifecycle: `new → confirmed → preparing → ready → out_for_delivery → delivered → served → bill_settled → completed` (+ `cancelled`)
-- Order items with modifier selections, special instructions, allergen flags
-- Status transition engine — validates allowed transitions, logs every change with actor + timestamp
-- Stock deduction on `confirmed` (fires `OrderConfirmed` event → `DeductStockJob` on `critical` queue)
-- Payment flow: Stripe PaymentIntent server-side, webhook confirms (no polling)
-  - **Note:** Blocked on Decision 7 (Stripe not yet formally confirmed). Implement as stub with `payment_status` field — wire Stripe later.
-- Cancellation engine: customer-initiated / restaurant-initiated / delivery-failure → `RefundEngine` service
-- Delivery zones per branch (radius/polygon, min order value, delivery fee, transit time)
-- Platform sync stubs (Uber Eats, DoorDash — same pattern as menu 86 sync jobs)
-- Broadcast events via Reverb: `OrderStatusChanged`, `NewOrderReceived`, `OrderModified`
-
-**Key models:** `Order`, `OrderItem`, `OrderStatusLog`, `OrderPayment`, `DeliveryZone`
-**Key services:** `OrderService`, `OrderStatusService`, `RefundEngine`, `DeliveryZoneService`
-**Key jobs:** `DeductStockJob` (critical queue), `SyncOrderToPlatformsJob` (high queue)
-**Key events:** `OrderConfirmed`, `OrderStatusChanged`, `OrderCancelled`
+| Module | Tests |
+|--------|-------|
+| Tenancy Infrastructure | TenantScopeTest (4) |
+| Auth — 3 guards + permissions | AuthServiceTest (5), RoleBuilderTest (5) |
+| Branch & Staff Management | BranchCrudTest (7), StaffLifecycleTest (4) |
+| Attendance & Shifts | AttendanceTest (5), ShiftsTest (5) |
+| Menu Management | MenuItemTest (7), EightySixTest (8), ModifierTest (5) |
+| EightySix Unit Tests | EightySixServiceTest (6) |
+| Role Unit Tests | RoleServiceTest (4) |
+| **Orders & Deliveries** | OrderLifecycleTest (12), DeliveryZoneTest (4) |
+| Laravel Reverb (WebSocket) | Wired up — `php artisan reverb:start` |
 
 ---
 
-### 2. Laravel Reverb — WebSocket Setup
-**Why:** Orders broadcasts (above) need Reverb running. Also needed for KDS in Phase 2.
+## Phase 2 — START HERE
 
-**What it achieves:** Real-time order dashboard. Staff see new orders arrive and status changes without polling.
-
-**Scope:**
-- Configure Reverb in `config/reverb.php` and `config/broadcasting.php`
-- Channel definitions: `tenant.{tenantId}.branch.{branchId}.orders` (private)
-- Broadcast `OrderStatusChanged` and `NewOrderReceived` on order transitions
-- Docker Compose service already planned — just needs the Laravel side wired up
-
----
-
-## Phase 2 — After Phase 1 is Complete
-
-### 3. Table & Reservation Management
+### 1. Table & Reservation Management ← START HERE
 Covers floor plans, table status, walk-ins, online bookings, waitlist management.
 
-### 4. Customer Profiles & Loyalty
+**What it achieves:** Restaurants can manage their dining room — track which tables are available, seat walk-ins, take reservations, run a waitlist.
+
+**Scope:**
+- Table layout per branch (number, capacity, position)
+- Table status: `available → seated → bill_requested → cleared` (+ `reserved`)
+- Reservations: create, confirm, cancel, seat (links to table)
+- Waitlist: add party, seat from waitlist, auto-notify (SMS stub)
+- Reservation reminders (stub — blocked on Decision 8 for real SMS)
+
+---
+
+### 2. Customer Profiles & Loyalty
 Customer deduplication across channels, loyalty points earn/redeem, basic tier management.
 Depends on: Orders (points issued on `completed` transition).
 
-### 5. Inventory & Kitchen
-Stock management, WAC costing, KDS ticket flow, waste logging.
-Depends on: Orders (stock deductions wired from OrderConfirmed).
+**What it achieves:** A single customer identity across dine-in, takeaway, and delivery. Restaurants can reward repeat customers and run targeted promotions.
 
-### 6. Events & Functions
+**Scope:**
+- Customer signup + login (platform-level, no `tenant_id` on profile)
+- Per-tenant customer profile (`customer_tenant_profiles`): loyalty points, tier, visit history
+- Points earn on order `completed` (via `IssueLoyaltyPointsJob` already stubbed)
+- Points redeem at order creation
+- Basic tier progression (Bronze / Silver / Gold based on spend)
+
+---
+
+### 3. Inventory & Kitchen
+Stock management, WAC costing, KDS ticket flow, waste logging.
+Depends on: Orders (`DeductStockJob` already stubbed, needs real implementation).
+
+**What it achieves:** Kitchen Display System for order tickets, stock tracking to prevent overselling, food cost visibility for managers.
+
+**Scope:**
+- Stock items + recipes (menu item → stock item mappings)
+- WAC (Weighted Average Cost) recalculation on GRN receipt
+- KDS ticket creation on `OrderConfirmed`; acknowledgement with allergen check (30s rule)
+- 86 auto-trigger on stockout (wires back into existing 86 system)
+- Waste log
+- Purchase orders + GRN receipt flow
+
+---
+
+### 4. Events & Functions
 Enquiry pipeline, event packages, deposits, event-specific menus.
 
-### 7. SaaS Tenant Onboarding
+**What it achieves:** Restaurants can manage private events and functions — from initial enquiry through contract, deposit, event execution, and post-event billing.
+
+**Scope:**
+- Event enquiry creation and pipeline (enquiry → proposal → confirmed → completed)
+- Event packages with pricing
+- Deposit management (stub — Stripe Payment blocked on Decision 7)
+- Event-specific menus
+- Corporate client management
+
+---
+
+### 5. SaaS Tenant Onboarding
 Self-service signup, plan selection, branch setup wizard.
 Depends on: All Phase 1 modules working end-to-end.
+
+**What it achieves:** New restaurants can sign up without manual provisioning. Owner creates account, picks plan, sets up their first branch, and is ready to take orders.
 
 ---
 

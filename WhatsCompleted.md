@@ -1,7 +1,7 @@
 # ChefLogik — What's Completed & How to Test
 
 ## Current Test State
-**65 tests, 65 passing** (run from `/api` directory)
+**81 tests, 81 passing** (run from `/api` directory)
 ```bash
 cd /Users/deepak/Projects/ChefLogik/api
 php artisan test
@@ -255,3 +255,103 @@ Then login:
 POST /api/v1/auth/staff/login
 { "email": "owner@test.com", "password": "password", "tenant_id": "<tenant_uuid>" }
 ```
+
+---
+
+### 6. Orders & Deliveries
+
+**What it does:**
+- Full order lifecycle: `new → confirmed → preparing → ready → served → bill_settled → completed`
+- Cancel at any non-terminal stage with a reason code
+- Order ref generation (`ORD-YYYYMMDD-NNNN`)
+- Total calculation: subtotal + delivery_fee + service_charge − discount_amount
+- Item snapshots — name, SKU, price locked at order time
+- Status history audit trail in `order_status_history`
+- Tenant isolation — orders are scoped to the authenticated tenant
+- Delivery zone management with pause/activate support
+- Stub jobs wired up: `DeductStockJob` (critical queue on confirm), `IssueLoyaltyPointsJob` (on complete), `SyncOrderToPlatformsJob` (platform orders)
+- Broadcast events for real-time order dashboard: `OrderStatusChanged`, `NewOrderReceived` on private channel `tenant.{id}.branch.{id}.orders`
+- `RefundEngine` stub — ready to wire Stripe once Decision 7 is confirmed
+
+**Test:**
+```bash
+php artisan test --filter="OrderLifecycleTest|DeliveryZoneTest"
+```
+
+**Key endpoints:**
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/v1/orders` | Create order |
+| `GET` | `/api/v1/orders` | List orders (filters: branch_id, status, source, date_from, date_to) |
+| `GET` | `/api/v1/orders/{id}` | Get order detail |
+| `POST` | `/api/v1/orders/{id}/status` | Transition status |
+| `POST` | `/api/v1/orders/{id}/cancel` | Cancel with reason |
+| `GET` | `/api/v1/branches/{branch}/delivery-zones` | List delivery zones |
+| `POST` | `/api/v1/branches/{branch}/delivery-zones` | Create delivery zone |
+| `GET` | `/api/v1/branches/{branch}/delivery-zones/{zone}` | Get zone |
+| `PUT` | `/api/v1/branches/{branch}/delivery-zones/{zone}` | Update zone |
+| `DELETE` | `/api/v1/branches/{branch}/delivery-zones/{zone}` | Delete zone |
+| `POST` | `/api/v1/branches/{branch}/delivery-zones/{zone}/pause` | Pause zone |
+| `POST` | `/api/v1/branches/{branch}/delivery-zones/{zone}/activate` | Activate zone |
+
+**Create order example:**
+```bash
+curl -X POST http://localhost:8000/api/v1/orders \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "branch_id": "<branch_uuid>",
+    "source": "dine_in_pos",
+    "service_charge": 2.50,
+    "items": [
+      {
+        "menu_item_id": "<item_uuid>",
+        "item_name": "Classic Burger",
+        "item_sku": "BURGER-01",
+        "quantity": 2,
+        "unit_price": 12.50
+      }
+    ]
+  }'
+```
+
+**Transition status:**
+```bash
+curl -X POST http://localhost:8000/api/v1/orders/<id>/status \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "confirmed"}'
+```
+
+**Cancel order:**
+```bash
+curl -X POST http://localhost:8000/api/v1/orders/<id>/cancel \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"reason_code": "out_of_stock", "reason_note": "Item unavailable"}'
+```
+
+**Valid order sources:** `dine_in_pos`, `takeaway_counter`, `qr_self_order`, `delivery_uber_eats`, `delivery_doordash`, `delivery_direct`, `phone`
+
+**Valid status transitions:**
+```
+new → confirmed | cancelled
+confirmed → preparing | cancelled
+preparing → ready | cancelled
+ready → served | cancelled
+served → bill_settled
+bill_settled → completed | cancelled
+```
+
+**Broadcast setup (for real-time dashboard):**
+Set in `.env`:
+```
+REVERB_APP_KEY=your-key
+REVERB_APP_SECRET=your-secret
+REVERB_APP_ID=your-app-id
+REVERB_HOST=localhost
+REVERB_PORT=8080
+```
+Start WebSocket server: `php artisan reverb:start`
+Subscribe to private channel: `tenant.{tenantId}.branch.{branchId}.orders`
