@@ -243,6 +243,11 @@ DELETE /api/v1/branches/{id}/hours/{date}    → remove a specific date override
 
 ### Staff (`/api/v1/staff/`)
 ```
+-- Owners (must precede staff CRUD routes to avoid /staff/{id} conflict)
+POST   /api/v1/staff/owners                  → create additional business owner; requires owners.manage permission
+                                               Body: { name, email }
+                                               Response: { owner: {id,name,email}, temp_password }
+
 -- Staff members
 GET    /api/v1/staff                         → list staff (scoped by caller's branch access)
 POST   /api/v1/staff                         → onboard new staff member
@@ -634,7 +639,9 @@ POST   /api/platform/auth/logout
 
 -- Tenant management
 GET    /api/platform/tenants
-POST   /api/platform/tenants
+POST   /api/platform/tenants              → Body: { name, slug, plan_id, owner_name, owner_email, settings? }
+                                            Auto-provisions: 8 system roles + first owner user + welcome email
+                                            Response: { tenant, owner: {id,name,email}, temp_password }
 GET    /api/platform/tenants/{id}
 PATCH  /api/platform/tenants/{id}
 POST   /api/platform/tenants/{id}/suspend

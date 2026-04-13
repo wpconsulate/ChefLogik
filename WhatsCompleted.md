@@ -1,7 +1,7 @@
 # ChefLogik — What's Completed & How to Test
 
 ## Current Test State
-**81 tests, 81 passing** (run from `/api` directory)
+**118 tests, 118 passing** (run from `/api` directory)
 ```bash
 cd /Users/deepak/Projects/ChefLogik/api
 php artisan test
@@ -67,7 +67,7 @@ GET  /api/v1/customer/auth/me
 
 ### 3. Permissions & Roles
 
-Dynamic role system. 79 permissions across all modules. 8 system roles seeded.
+Dynamic role system. 80 permissions across all modules. 8 system roles seeded.
 
 **System roles:** `owner`, `branch_manager`, `events_manager`, `head_chef`, `chef_de_partie`, `waiter`, `host`, `kitchen_porter`
 
@@ -193,12 +193,135 @@ GET    /api/public/menu/{branchId}            full menu with overrides applied (
 
 ### 7. Platform Admin — Tenant Management
 
+Creating a tenant auto-provisions the first business owner: generates a temporary password, assigns the `owner` system role with all permissions, and dispatches a welcome email.
+
 ```
 GET    /api/platform/tenants                  list all tenants
-POST   /api/platform/tenants                  create tenant
+POST   /api/platform/tenants                  create tenant + first owner (requires owner_name, owner_email)
 GET    /api/platform/tenants/{tenant}         show tenant
 PUT    /api/platform/tenants/{tenant}         update tenant
-DELETE /api/platform/tenants/{tenant}         delete tenant
+DELETE /api/platform/tenants/{tenant}         soft-cancel tenant (status → cancelled)
+```
+
+`POST /api/platform/tenants` required fields:
+```json
+{
+  "name":        "The Crown Restaurant",
+  "slug":        "the-crown",
+  "plan_id":     "<uuid>",
+  "owner_name":  "James Whitfield",
+  "owner_email": "james@thecrown.com"
+}
+```
+
+Response includes `temp_password` — shown once, owner must change on first login.
+
+```
+POST   /api/v1/staff/owners                   create additional co-owner (requires owners.manage permission)
+```
+
+**Test:** `php artisan test --filter TenantProvisioningTest|OwnerManagementTest`
+
+---
+
+### 8. Orders & Deliveries
+
+**What it does:**
+- Full order lifecycle: `new → confirmed → preparing → ready → served → bill_settled → completed`
+- Cancel at any non-terminal stage with a reason code
+- Order ref generation (`ORD-YYYYMMDD-NNNN`)
+- Total calculation: subtotal + delivery_fee + service_charge − discount_amount
+- Item snapshots — name, SKU, price locked at order time
+- Status history audit trail in `order_status_history`
+- Tenant isolation — orders are scoped to the authenticated tenant
+- Delivery zone management with pause/activate support
+- Stub jobs wired up: `DeductStockJob` (critical queue on confirm), `IssueLoyaltyPointsJob` (on complete), `SyncOrderToPlatformsJob` (platform orders)
+- Broadcast events for real-time order dashboard: `OrderStatusChanged`, `NewOrderReceived` on private channel `tenant.{id}.branch.{id}.orders`
+- `RefundEngine` stub — ready to wire Stripe once Decision 7 is confirmed
+
+**Test:** `php artisan test --filter="OrderLifecycleTest|DeliveryZoneTest"`
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/v1/orders` | Create order |
+| `GET` | `/api/v1/orders` | List orders (filters: branch_id, status, source, date_from, date_to) |
+| `GET` | `/api/v1/orders/{id}` | Get order detail |
+| `POST` | `/api/v1/orders/{id}/status` | Transition status |
+| `POST` | `/api/v1/orders/{id}/cancel` | Cancel with reason |
+| `GET` | `/api/v1/branches/{branch}/delivery-zones` | List delivery zones |
+| `POST` | `/api/v1/branches/{branch}/delivery-zones` | Create delivery zone |
+| `GET` | `/api/v1/branches/{branch}/delivery-zones/{zone}` | Get zone |
+| `PUT` | `/api/v1/branches/{branch}/delivery-zones/{zone}` | Update zone |
+| `DELETE` | `/api/v1/branches/{branch}/delivery-zones/{zone}` | Delete zone |
+| `POST` | `/api/v1/branches/{branch}/delivery-zones/{zone}/pause` | Pause zone |
+| `POST` | `/api/v1/branches/{branch}/delivery-zones/{zone}/activate` | Activate zone |
+
+---
+
+### 9. Table & Reservation Management ✓ (Phase 2 — Module 1)
+
+**What it does:**
+- Floor plan CRUD per branch (JSON layout_data for canvas rendering)
+- Table CRUD with state machine: `free → reserved → occupied → needs_cleaning → blocked`
+- Invalid transitions return 409
+- Block/unblock tables (manager action)
+- WebSocket broadcast on every table state change → `tenant.{id}.branch.{id}.tables`
+- Reservation lifecycle: `confirmed → arrived → seated → completed` + `no_show` / `cancelled`
+- Seating links a table to a reservation and transitions both at once
+- No-show increments `customer_profiles.no_show_count`
+- Availability algorithm: checks operating hours (special hours take precedence), finds tables by party size, filters out overlapping reservations
+- 24h + 2h reminder jobs dispatched on creation (SMS stubs — blocked on Decision 8)
+- Waitlist: add party, seat from waitlist (transitions table to occupied), mark left
+- Walk-in profile matching by phone (E.164 normalised): match / no-match / multiple
+
+**Test:** `php artisan test --filter="ReservationLifecycleTest|WalkInMatchingTest"`
+
+#### Floor Plans
+```
+GET    /api/v1/branches/{branch}/floor-plans              list floor plans
+POST   /api/v1/branches/{branch}/floor-plans              create floor plan
+GET    /api/v1/branches/{branch}/floor-plans/{plan}       show (with tables)
+PUT    /api/v1/branches/{branch}/floor-plans/{plan}       update
+DELETE /api/v1/branches/{branch}/floor-plans/{plan}       delete
+```
+
+#### Tables
+```
+GET    /api/v1/branches/{branch}/tables                   list tables (filters: floor_plan_id, status)
+POST   /api/v1/branches/{branch}/tables                   create table
+GET    /api/v1/branches/{branch}/tables/{table}           show table
+PUT    /api/v1/branches/{branch}/tables/{table}           update table
+DELETE /api/v1/branches/{branch}/tables/{table}           delete table
+POST   /api/v1/branches/{branch}/tables/{table}/status    transition status
+POST   /api/v1/branches/{branch}/tables/{table}/block     block table
+POST   /api/v1/branches/{branch}/tables/{table}/unblock   unblock table
+```
+
+#### Reservations
+```
+GET    /api/v1/reservations/availability              check available slots (?branch_id, date, party_size)
+GET    /api/v1/reservations                           list reservations (filters: branch_id, date, status)
+POST   /api/v1/reservations                           create reservation
+GET    /api/v1/reservations/{id}                      show reservation
+PUT    /api/v1/reservations/{id}                      update reservation
+POST   /api/v1/reservations/{id}/arrive               mark arrived
+POST   /api/v1/reservations/{id}/seat                 seat guests (requires table_id)
+POST   /api/v1/reservations/{id}/complete             complete (table → needs_cleaning)
+POST   /api/v1/reservations/{id}/no-show              no-show (table freed, no_show_count++)
+POST   /api/v1/reservations/{id}/cancel               cancel with optional reason
+```
+
+#### Waitlist
+```
+GET    /api/v1/branches/{branch}/waitlist              list waiting entries
+POST   /api/v1/branches/{branch}/waitlist              add to waitlist
+POST   /api/v1/branches/{branch}/waitlist/{id}/seat    seat from waitlist
+POST   /api/v1/branches/{branch}/waitlist/{id}/leave   mark as left
+```
+
+#### Walk-in
+```
+POST   /api/v1/walk-in/match                           match by phone (action: match|create|multiple)
 ```
 
 ---
@@ -228,130 +351,27 @@ php artisan serve      # http://localhost:8000
 |---|---|---|
 | Platform Admin | admin@cheflogik.com | changeme-in-production |
 
-**No staff users are pre-seeded.** A platform admin must create a tenant, then you create the first staff owner via the staff API (or directly in the DB for local dev).
+**No staff users are pre-seeded.** Create a tenant via the platform API — it auto-provisions the first owner, 8 system roles, and sends a welcome email with a temporary password.
 
-## Quick Local Dev Setup (Tinker)
+## Quick Local Dev Setup
 
 ```bash
-php artisan tinker
-
-# Create a tenant
-$plan = App\Models\SubscriptionPlan::where('slug','starter')->first();
-$tenant = App\Models\Tenant::create(['name'=>'Test Restaurant','slug'=>'test-restaurant','plan_id'=>$plan->id,'status'=>'active']);
-
-# Create an owner role for the tenant
-$role = App\Models\Role::create(['tenant_id'=>$tenant->id,'name'=>'Owner','slug'=>'owner','is_system'=>true]);
-$role->permissions()->attach(App\Models\Permission::pluck('id'));
-
-# Create a staff user
-$user = App\Models\User::create(['tenant_id'=>$tenant->id,'name'=>'Test Owner','email'=>'owner@test.com','password'=>bcrypt('password'),'status'=>'active']);
-App\Models\UserRole::create(['user_id'=>$user->id,'role_id'=>$role->id,'tenant_id'=>$tenant->id,'branch_ids'=>null,'assigned_by'=>$user->id,'assigned_at'=>now()]);
-
-echo $tenant->id;  # copy this for login
-```
-
-Then login:
-```bash
-POST /api/v1/auth/staff/login
-{ "email": "owner@test.com", "password": "password", "tenant_id": "<tenant_uuid>" }
-```
-
----
-
-### 6. Orders & Deliveries
-
-**What it does:**
-- Full order lifecycle: `new → confirmed → preparing → ready → served → bill_settled → completed`
-- Cancel at any non-terminal stage with a reason code
-- Order ref generation (`ORD-YYYYMMDD-NNNN`)
-- Total calculation: subtotal + delivery_fee + service_charge − discount_amount
-- Item snapshots — name, SKU, price locked at order time
-- Status history audit trail in `order_status_history`
-- Tenant isolation — orders are scoped to the authenticated tenant
-- Delivery zone management with pause/activate support
-- Stub jobs wired up: `DeductStockJob` (critical queue on confirm), `IssueLoyaltyPointsJob` (on complete), `SyncOrderToPlatformsJob` (platform orders)
-- Broadcast events for real-time order dashboard: `OrderStatusChanged`, `NewOrderReceived` on private channel `tenant.{id}.branch.{id}.orders`
-- `RefundEngine` stub — ready to wire Stripe once Decision 7 is confirmed
-
-**Test:**
-```bash
-php artisan test --filter="OrderLifecycleTest|DeliveryZoneTest"
-```
-
-**Key endpoints:**
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `POST` | `/api/v1/orders` | Create order |
-| `GET` | `/api/v1/orders` | List orders (filters: branch_id, status, source, date_from, date_to) |
-| `GET` | `/api/v1/orders/{id}` | Get order detail |
-| `POST` | `/api/v1/orders/{id}/status` | Transition status |
-| `POST` | `/api/v1/orders/{id}/cancel` | Cancel with reason |
-| `GET` | `/api/v1/branches/{branch}/delivery-zones` | List delivery zones |
-| `POST` | `/api/v1/branches/{branch}/delivery-zones` | Create delivery zone |
-| `GET` | `/api/v1/branches/{branch}/delivery-zones/{zone}` | Get zone |
-| `PUT` | `/api/v1/branches/{branch}/delivery-zones/{zone}` | Update zone |
-| `DELETE` | `/api/v1/branches/{branch}/delivery-zones/{zone}` | Delete zone |
-| `POST` | `/api/v1/branches/{branch}/delivery-zones/{zone}/pause` | Pause zone |
-| `POST` | `/api/v1/branches/{branch}/delivery-zones/{zone}/activate` | Activate zone |
-
-**Create order example:**
-```bash
-curl -X POST http://localhost:8000/api/v1/orders \
-  -H "Authorization: Bearer <token>" \
+# Create a tenant + first owner via the platform API
+curl -X POST http://localhost:8000/api/platform/tenants \
+  -H "Authorization: Bearer <platform_admin_token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "branch_id": "<branch_uuid>",
-    "source": "dine_in_pos",
-    "service_charge": 2.50,
-    "items": [
-      {
-        "menu_item_id": "<item_uuid>",
-        "item_name": "Classic Burger",
-        "item_sku": "BURGER-01",
-        "quantity": 2,
-        "unit_price": 12.50
-      }
-    ]
+    "name":        "Test Restaurant",
+    "slug":        "test-restaurant",
+    "plan_id":     "<plan_uuid>",
+    "owner_name":  "Test Owner",
+    "owner_email": "owner@test.com"
   }'
+# Response includes tenant_id, owner.id, and temp_password
 ```
 
-**Transition status:**
+Then login as the owner:
 ```bash
-curl -X POST http://localhost:8000/api/v1/orders/<id>/status \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"status": "confirmed"}'
+POST /api/v1/auth/staff/login
+{ "email": "owner@test.com", "password": "<temp_password>", "tenant_id": "<tenant_uuid>" }
 ```
-
-**Cancel order:**
-```bash
-curl -X POST http://localhost:8000/api/v1/orders/<id>/cancel \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"reason_code": "out_of_stock", "reason_note": "Item unavailable"}'
-```
-
-**Valid order sources:** `dine_in_pos`, `takeaway_counter`, `qr_self_order`, `delivery_uber_eats`, `delivery_doordash`, `delivery_direct`, `phone`
-
-**Valid status transitions:**
-```
-new → confirmed | cancelled
-confirmed → preparing | cancelled
-preparing → ready | cancelled
-ready → served | cancelled
-served → bill_settled
-bill_settled → completed | cancelled
-```
-
-**Broadcast setup (for real-time dashboard):**
-Set in `.env`:
-```
-REVERB_APP_KEY=your-key
-REVERB_APP_SECRET=your-secret
-REVERB_APP_ID=your-app-id
-REVERB_HOST=localhost
-REVERB_PORT=8080
-```
-Start WebSocket server: `php artisan reverb:start`
-Subscribe to private channel: `tenant.{tenantId}.branch.{branchId}.orders`

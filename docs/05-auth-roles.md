@@ -272,8 +272,8 @@ System roles are seeded once and are immutable (is_system = true). Custom roles 
 | System Role | Key permissions granted |
 |---|---|
 | `platform_admin` | All — bypasses tenant gate entirely |
-| `owner` | All permissions within their tenant |
-| `branch_manager` | All permissions scoped to their branch |
+| `owner` | All permissions within their tenant (including `owners.manage`) |
+| `branch_manager` | All permissions scoped to their branch **except `owners.manage`** — branch managers cannot create co-owners |
 | `events_manager` | events.*, reservations.*, customers.view_basic, analytics.events_dashboard |
 | `head_chef` | inventory.*, menu.view, menu.86_item, kds.*, analytics.kitchen_dashboard |
 | `chef_de_partie` | inventory.view_stock, inventory.log_waste, inventory.receive_grn, menu.view, kds.* |

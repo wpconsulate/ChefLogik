@@ -1,0 +1,1452 @@
+{
+  "info": {
+    "name": "ChefLogik API",
+    "description": "Full API collection for ChefLogik — Restaurant Management SaaS.\n\n**Setup:**\n1. Set the `base_url` variable to `http://localhost:8000`\n2. Run **Staff Auth → Login** and copy the token into `staff_token`\n3. Set `tenant_id` to your tenant UUID\n4. Run platform requests with `platform_token` from **Platform Auth → Login**\n\n**Auth guards:**\n- `staff_token` — used by all `/api/v1/` endpoints (except public menu)\n- `platform_token` — used by all `/api/platform/` endpoints\n- `customer_token` — used by customer auth endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",        "value": "http://localhost:8000",  "type": "string" },
+    { "key": "staff_token",     "value": "",                       "type": "string" },
+    { "key": "platform_token",  "value": "",                       "type": "string" },
+    { "key": "customer_token",  "value": "",                       "type": "string" },
+    { "key": "tenant_id",       "value": "",                       "type": "string" },
+    { "key": "plan_id",         "value": "",                       "type": "string" },
+    { "key": "branch_id",       "value": "",                       "type": "string" },
+    { "key": "staff_id",        "value": "",                       "type": "string" },
+    { "key": "role_id",         "value": "",                       "type": "string" },
+    { "key": "shift_id",        "value": "",                       "type": "string" },
+    { "key": "category_id",     "value": "",                       "type": "string" },
+    { "key": "item_id",         "value": "",                       "type": "string" },
+    { "key": "modifier_group_id", "value": "",                     "type": "string" },
+    { "key": "eighty_six_log_id", "value": "",                     "type": "string" },
+    { "key": "order_id",        "value": "",                       "type": "string" },
+    { "key": "delivery_zone_id", "value": "",                      "type": "string" },
+    { "key": "floor_plan_id",   "value": "",                       "type": "string" },
+    { "key": "table_id",        "value": "",                       "type": "string" },
+    { "key": "reservation_id",  "value": "",                       "type": "string" },
+    { "key": "waitlist_id",     "value": "",                       "type": "string" }
+  ],
+  "item": [
+
+    {
+      "name": "Platform Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var json = pm.response.json();",
+            "if (json.data && json.data.token) {",
+            "  pm.collectionVariables.set('platform_token', json.data.token);",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@cheflogik.com\",\n  \"password\": \"password\"\n}" },
+            "url": { "raw": "{{base_url}}/api/platform/auth/login", "host": ["{{base_url}}"], "path": ["api","platform","auth","login"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{platform_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/platform/auth/logout", "host": ["{{base_url}}"], "path": ["api","platform","auth","logout"] }
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{platform_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/platform/auth/me", "host": ["{{base_url}}"], "path": ["api","platform","auth","me"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Platform — Tenants",
+      "item": [
+        {
+          "name": "List Tenants",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{platform_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/platform/tenants", "host": ["{{base_url}}"], "path": ["api","platform","tenants"] }
+          }
+        },
+        {
+          "name": "Create Tenant (+ auto-provisions owner & 8 system roles)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var json = pm.response.json();",
+            "if (json.data && json.data.tenant && json.data.tenant.id) {",
+            "  pm.collectionVariables.set('tenant_id', json.data.tenant.id);",
+            "}",
+            "if (json.data && json.data.temp_password) {",
+            "  console.log('Temp password:', json.data.temp_password);",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{platform_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"The Grand Restaurant\",\n  \"slug\": \"the-grand\",\n  \"plan_id\": \"{{plan_id}}\",\n  \"owner_name\": \"James Whitfield\",\n  \"owner_email\": \"james@thegrand.com\"\n}" },
+            "url": { "raw": "{{base_url}}/api/platform/tenants", "host": ["{{base_url}}"], "path": ["api","platform","tenants"] }
+          }
+        },
+        {
+          "name": "Get Tenant",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{platform_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/platform/tenants/{{tenant_id}}", "host": ["{{base_url}}"], "path": ["api","platform","tenants","{{tenant_id}}"] }
+          }
+        },
+        {
+          "name": "Update Tenant",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{platform_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"The Grand Restaurant Updated\"\n}" },
+            "url": { "raw": "{{base_url}}/api/platform/tenants/{{tenant_id}}", "host": ["{{base_url}}"], "path": ["api","platform","tenants","{{tenant_id}}"] }
+          }
+        },
+        {
+          "name": "Delete Tenant",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{platform_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/platform/tenants/{{tenant_id}}", "host": ["{{base_url}}"], "path": ["api","platform","tenants","{{tenant_id}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Staff Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var json = pm.response.json();",
+            "if (json.data && json.data.token) {",
+            "  pm.collectionVariables.set('staff_token', json.data.token);",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"owner@thegrand.com\",\n  \"password\": \"password\",\n  \"tenant_id\": \"{{tenant_id}}\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/auth/staff/login", "host": ["{{base_url}}"], "path": ["api","v1","auth","staff","login"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/auth/staff/logout", "host": ["{{base_url}}"], "path": ["api","v1","auth","staff","logout"] }
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/auth/staff/me", "host": ["{{base_url}}"], "path": ["api","v1","auth","staff","me"] }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/auth/staff/refresh", "host": ["{{base_url}}"], "path": ["api","v1","auth","staff","refresh"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Customer Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var json = pm.response.json();",
+            "if (json.data && json.data.token) {",
+            "  pm.collectionVariables.set('customer_token', json.data.token);",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"customer@example.com\",\n  \"password\": \"password\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/customer/auth/login", "host": ["{{base_url}}"], "path": ["api","v1","customer","auth","login"] }
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{customer_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/customer/auth/me", "host": ["{{base_url}}"], "path": ["api","v1","customer","auth","me"] }
+          }
+        },
+        {
+          "name": "List Restaurants",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{customer_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/customer/auth/restaurants", "host": ["{{base_url}}"], "path": ["api","v1","customer","auth","restaurants"] }
+          }
+        },
+        {
+          "name": "Select Tenant (get scoped token)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{customer_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"tenant_id\": \"{{tenant_id}}\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/customer/auth/select", "host": ["{{base_url}}"], "path": ["api","v1","customer","auth","select"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{customer_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/customer/auth/logout", "host": ["{{base_url}}"], "path": ["api","v1","customer","auth","logout"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Branches",
+      "item": [
+        {
+          "name": "List Branches",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/branches", "host": ["{{base_url}}"], "path": ["api","v1","branches"] }
+          }
+        },
+        {
+          "name": "Create Branch",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var json = pm.response.json();",
+            "if (json.data && json.data.id) {",
+            "  pm.collectionVariables.set('branch_id', json.data.id);",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Main Street Branch\",\n  \"address\": \"123 Main Street\",\n  \"city\": \"London\",\n  \"postcode\": \"EC1A 1BB\",\n  \"country\": \"GB\",\n  \"phone\": \"+442071234567\",\n  \"timezone\": \"Europe/London\",\n  \"currency\": \"GBP\",\n  \"covers\": 60\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/branches", "host": ["{{base_url}}"], "path": ["api","v1","branches"] }
+          }
+        },
+        {
+          "name": "Get Branch",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/branches/{{branch_id}}", "host": ["{{base_url}}"], "path": ["api","v1","branches","{{branch_id}}"] }
+          }
+        },
+        {
+          "name": "Update Branch",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Main Street Branch (Updated)\",\n  \"covers\": 80\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/branches/{{branch_id}}", "host": ["{{base_url}}"], "path": ["api","v1","branches","{{branch_id}}"] }
+          }
+        },
+        {
+          "name": "Delete Branch",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/branches/{{branch_id}}", "host": ["{{base_url}}"], "path": ["api","v1","branches","{{branch_id}}"] }
+          }
+        },
+        {
+          "name": "List Special Hours",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/hours", "host": ["{{base_url}}"], "path": ["api","v1","branches","{{branch_id}}","hours"] }
+          }
+        },
+        {
+          "name": "Add Special Hours",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"date\": \"2026-12-25\",\n  \"is_closed\": true,\n  \"note\": \"Christmas Day\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/hours", "host": ["{{base_url}}"], "path": ["api","v1","branches","{{branch_id}}","hours"] }
+          }
+        },
+        {
+          "name": "Delete Special Hours",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/hours/:hour_id", "host": ["{{base_url}}"], "path": ["api","v1","branches","{{branch_id}}","hours",":hour_id"], "variable": [{ "key": "hour_id", "value": "" }] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Staff",
+      "item": [
+        {
+          "name": "List Staff",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/staff", "host": ["{{base_url}}"], "path": ["api","v1","staff"] }
+          }
+        },
+        {
+          "name": "Create Staff Member",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var json = pm.response.json();",
+            "if (json.data && json.data.id) {",
+            "  pm.collectionVariables.set('staff_id', json.data.id);",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Jane Smith\",\n  \"email\": \"jane.smith@thegrand.com\",\n  \"password\": \"password\",\n  \"phone\": \"+447912345678\",\n  \"role_id\": \"{{role_id}}\",\n  \"branch_ids\": [\"{{branch_id}}\"]\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/staff", "host": ["{{base_url}}"], "path": ["api","v1","staff"] }
+          }
+        },
+        {
+          "name": "Get Staff Member",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/staff/{{staff_id}}", "host": ["{{base_url}}"], "path": ["api","v1","staff","{{staff_id}}"] }
+          }
+        },
+        {
+          "name": "Update Staff Member",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Jane Smith\",\n  \"phone\": \"+447999999999\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/staff/{{staff_id}}", "host": ["{{base_url}}"], "path": ["api","v1","staff","{{staff_id}}"] }
+          }
+        },
+        {
+          "name": "Offboard Staff Member",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"Resigned\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/staff/{{staff_id}}/offboard", "host": ["{{base_url}}"], "path": ["api","v1","staff","{{staff_id}}","offboard"] }
+          }
+        },
+        {
+          "name": "Delete Staff Member",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/staff/{{staff_id}}", "host": ["{{base_url}}"], "path": ["api","v1","staff","{{staff_id}}"] }
+          }
+        },
+        {
+          "name": "Upload Document",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "formdata", "formdata": [{ "key": "document", "type": "file", "src": "" }, { "key": "type", "value": "contract", "type": "text" }] },
+            "url": { "raw": "{{base_url}}/api/v1/staff/{{staff_id}}/documents", "host": ["{{base_url}}"], "path": ["api","v1","staff","{{staff_id}}","documents"] }
+          }
+        },
+        {
+          "name": "Export Payroll (CSV)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "text/csv" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/staff/payroll/export?branch_id={{branch_id}}&from=2026-04-01&to=2026-04-30",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","staff","payroll","export"],
+              "query": [
+                { "key": "branch_id", "value": "{{branch_id}}" },
+                { "key": "from", "value": "2026-04-01" },
+                { "key": "to", "value": "2026-04-30" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Roles & Permissions",
+      "item": [
+        {
+          "name": "List Permissions",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/staff/permissions", "host": ["{{base_url}}"], "path": ["api","v1","staff","permissions"] }
+          }
+        },
+        {
+          "name": "List Roles",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/staff/roles", "host": ["{{base_url}}"], "path": ["api","v1","staff","roles"] }
+          }
+        },
+        {
+          "name": "Create Role",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var json = pm.response.json();",
+            "if (json.data && json.data.id) {",
+            "  pm.collectionVariables.set('role_id', json.data.id);",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Floor Manager\",\n  \"permissions\": [\n    \"orders.view\",\n    \"orders.create\",\n    \"orders.modify\",\n    \"orders.cancel\"\n  ]\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/staff/roles", "host": ["{{base_url}}"], "path": ["api","v1","staff","roles"] }
+          }
+        },
+        {
+          "name": "Get Role",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/staff/roles/{{role_id}}", "host": ["{{base_url}}"], "path": ["api","v1","staff","roles","{{role_id}}"] }
+          }
+        },
+        {
+          "name": "Update Role",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Senior Floor Manager\",\n  \"permissions\": [\n    \"orders.view\",\n    \"orders.create\",\n    \"orders.modify\",\n    \"orders.cancel\",\n    \"orders.refund\"\n  ]\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/staff/roles/{{role_id}}", "host": ["{{base_url}}"], "path": ["api","v1","staff","roles","{{role_id}}"] }
+          }
+        },
+        {
+          "name": "Delete Role",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/staff/roles/{{role_id}}", "host": ["{{base_url}}"], "path": ["api","v1","staff","roles","{{role_id}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Attendance",
+      "item": [
+        {
+          "name": "Clock In",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"branch_id\": \"{{branch_id}}\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/staff/clock-in", "host": ["{{base_url}}"], "path": ["api","v1","staff","clock-in"] }
+          }
+        },
+        {
+          "name": "Clock Out",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"branch_id\": \"{{branch_id}}\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/staff/clock-out", "host": ["{{base_url}}"], "path": ["api","v1","staff","clock-out"] }
+          }
+        },
+        {
+          "name": "List Attendance",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/staff/attendance?branch_id={{branch_id}}&from=2026-04-01&to=2026-04-30",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","staff","attendance"],
+              "query": [
+                { "key": "branch_id", "value": "{{branch_id}}", "description": "Optional" },
+                { "key": "from", "value": "2026-04-01", "description": "Optional" },
+                { "key": "to", "value": "2026-04-30", "description": "Optional" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Shifts",
+      "item": [
+        {
+          "name": "List Shifts",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/staff/shifts?branch_id={{branch_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","staff","shifts"],
+              "query": [{ "key": "branch_id", "value": "{{branch_id}}", "description": "Optional" }]
+            }
+          }
+        },
+        {
+          "name": "Create Shift",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var json = pm.response.json();",
+            "if (json.data && json.data.id) {",
+            "  pm.collectionVariables.set('shift_id', json.data.id);",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"branch_id\": \"{{branch_id}}\",\n  \"user_id\": null,\n  \"role\": \"server\",\n  \"starts_at\": \"2026-04-15T10:00:00Z\",\n  \"ends_at\": \"2026-04-15T18:00:00Z\",\n  \"notes\": \"Lunch and dinner service\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/staff/shifts", "host": ["{{base_url}}"], "path": ["api","v1","staff","shifts"] }
+          }
+        },
+        {
+          "name": "Get Shift",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/staff/shifts/{{shift_id}}", "host": ["{{base_url}}"], "path": ["api","v1","staff","shifts","{{shift_id}}"] }
+          }
+        },
+        {
+          "name": "Update Shift",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"ends_at\": \"2026-04-15T20:00:00Z\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/staff/shifts/{{shift_id}}", "host": ["{{base_url}}"], "path": ["api","v1","staff","shifts","{{shift_id}}"] }
+          }
+        },
+        {
+          "name": "Claim Shift",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/staff/shifts/{{shift_id}}/claim", "host": ["{{base_url}}"], "path": ["api","v1","staff","shifts","{{shift_id}}","claim"] }
+          }
+        },
+        {
+          "name": "Delete Shift",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/staff/shifts/{{shift_id}}", "host": ["{{base_url}}"], "path": ["api","v1","staff","shifts","{{shift_id}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Menu — Categories",
+      "item": [
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/menu/categories", "host": ["{{base_url}}"], "path": ["api","v1","menu","categories"] }
+          }
+        },
+        {
+          "name": "Create Category",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var json = pm.response.json();",
+            "if (json.data && json.data.id) {",
+            "  pm.collectionVariables.set('category_id', json.data.id);",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Mains\",\n  \"description\": \"Main course dishes\",\n  \"sort_order\": 1,\n  \"parent_id\": null,\n  \"is_active\": true\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/menu/categories", "host": ["{{base_url}}"], "path": ["api","v1","menu","categories"] }
+          }
+        },
+        {
+          "name": "Get Category",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/menu/categories/{{category_id}}", "host": ["{{base_url}}"], "path": ["api","v1","menu","categories","{{category_id}}"] }
+          }
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Main Courses\",\n  \"sort_order\": 2\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/menu/categories/{{category_id}}", "host": ["{{base_url}}"], "path": ["api","v1","menu","categories","{{category_id}}"] }
+          }
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/menu/categories/{{category_id}}", "host": ["{{base_url}}"], "path": ["api","v1","menu","categories","{{category_id}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Menu — Items",
+      "item": [
+        {
+          "name": "List Items",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/menu/items?category_id={{category_id}}&is_active=true&is_master=true",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","menu","items"],
+              "query": [
+                { "key": "category_id", "value": "{{category_id}}", "description": "Optional — filter by category" },
+                { "key": "is_active", "value": "true", "description": "Optional — true/false" },
+                { "key": "is_master", "value": "true", "description": "Optional — master items only" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Item",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var json = pm.response.json();",
+            "if (json.data && json.data.id) {",
+            "  pm.collectionVariables.set('item_id', json.data.id);",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"category_id\": \"{{category_id}}\",\n  \"sku\": \"BURGER-01\",\n  \"name\": \"Classic Burger\",\n  \"description\": \"8oz beef patty, lettuce, tomato, pickles\",\n  \"base_price\": 12.50,\n  \"is_active\": true,\n  \"is_master\": true,\n  \"allergens\": [\"gluten\", \"dairy\"],\n  \"dietary_flags\": []\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/menu/items", "host": ["{{base_url}}"], "path": ["api","v1","menu","items"] }
+          }
+        },
+        {
+          "name": "Get Item",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/menu/items/{{item_id}}", "host": ["{{base_url}}"], "path": ["api","v1","menu","items","{{item_id}}"] }
+          }
+        },
+        {
+          "name": "Update Item",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Classic Cheeseburger\",\n  \"base_price\": 13.50\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/menu/items/{{item_id}}", "host": ["{{base_url}}"], "path": ["api","v1","menu","items","{{item_id}}"] }
+          }
+        },
+        {
+          "name": "Delete Item",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/menu/items/{{item_id}}", "host": ["{{base_url}}"], "path": ["api","v1","menu","items","{{item_id}}"] }
+          }
+        },
+        {
+          "name": "86 Item (mark unavailable)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"branch_id\": \"{{branch_id}}\",\n  \"reason\": \"Ran out of patties\",\n  \"trigger_type\": \"manual\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/menu/items/{{item_id}}/86", "host": ["{{base_url}}"], "path": ["api","v1","menu","items","{{item_id}}","86"] }
+          }
+        },
+        {
+          "name": "Restore Item",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"manager_confirmed\": true\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/menu/items/{{item_id}}/restore/{{eighty_six_log_id}}", "host": ["{{base_url}}"], "path": ["api","v1","menu","items","{{item_id}}","restore","{{eighty_six_log_id}}"] }
+          }
+        },
+        {
+          "name": "Get 86 History",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/menu/items/{{item_id}}/86/history?branch_id={{branch_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","menu","items","{{item_id}}","86","history"],
+              "query": [{ "key": "branch_id", "value": "{{branch_id}}", "description": "Optional" }]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Menu — Modifier Groups",
+      "item": [
+        {
+          "name": "List Modifier Groups",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/menu/modifier-groups", "host": ["{{base_url}}"], "path": ["api","v1","menu","modifier-groups"] }
+          }
+        },
+        {
+          "name": "Create Modifier Group",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var json = pm.response.json();",
+            "if (json.data && json.data.id) {",
+            "  pm.collectionVariables.set('modifier_group_id', json.data.id);",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Choose your sauce\",\n  \"min_selections\": 1,\n  \"max_selections\": 2,\n  \"is_required\": true,\n  \"modifiers\": [\n    { \"name\": \"Ketchup\",  \"price_delta\": 0,    \"is_default\": false },\n    { \"name\": \"Mayo\",     \"price_delta\": 0,    \"is_default\": true  },\n    { \"name\": \"BBQ\",      \"price_delta\": 0.50, \"is_default\": false }\n  ]\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/menu/modifier-groups", "host": ["{{base_url}}"], "path": ["api","v1","menu","modifier-groups"] }
+          }
+        },
+        {
+          "name": "Get Modifier Group",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/menu/modifier-groups/{{modifier_group_id}}", "host": ["{{base_url}}"], "path": ["api","v1","menu","modifier-groups","{{modifier_group_id}}"] }
+          }
+        },
+        {
+          "name": "Update Modifier Group",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Choose your sauce (updated)\",\n  \"max_selections\": 3,\n  \"modifiers\": [\n    { \"name\": \"Ketchup\",    \"price_delta\": 0,    \"is_default\": false },\n    { \"name\": \"Mayo\",       \"price_delta\": 0,    \"is_default\": true  },\n    { \"name\": \"BBQ\",        \"price_delta\": 0.50, \"is_default\": false },\n    { \"name\": \"Sriracha\",   \"price_delta\": 0.50, \"is_default\": false }\n  ]\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/menu/modifier-groups/{{modifier_group_id}}", "host": ["{{base_url}}"], "path": ["api","v1","menu","modifier-groups","{{modifier_group_id}}"] }
+          }
+        },
+        {
+          "name": "Delete Modifier Group",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/menu/modifier-groups/{{modifier_group_id}}", "host": ["{{base_url}}"], "path": ["api","v1","menu","modifier-groups","{{modifier_group_id}}"] }
+          }
+        },
+        {
+          "name": "Attach Modifier Group to Item",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"sort_order\": 1\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/menu/items/{{item_id}}/modifier-groups/{{modifier_group_id}}", "host": ["{{base_url}}"], "path": ["api","v1","menu","items","{{item_id}}","modifier-groups","{{modifier_group_id}}"] }
+          }
+        },
+        {
+          "name": "Detach Modifier Group from Item",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/menu/items/{{item_id}}/modifier-groups/{{modifier_group_id}}", "host": ["{{base_url}}"], "path": ["api","v1","menu","items","{{item_id}}","modifier-groups","{{modifier_group_id}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Menu — Branch Overrides",
+      "item": [
+        {
+          "name": "List Overrides for Item",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/menu/items/{{item_id}}/overrides", "host": ["{{base_url}}"], "path": ["api","v1","menu","items","{{item_id}}","overrides"] }
+          }
+        },
+        {
+          "name": "Upsert Branch Override",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"price\": 14.00,\n  \"is_available\": true\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/menu/items/{{item_id}}/overrides/{{branch_id}}", "host": ["{{base_url}}"], "path": ["api","v1","menu","items","{{item_id}}","overrides","{{branch_id}}"] }
+          }
+        },
+        {
+          "name": "Delete Branch Override",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/menu/items/{{item_id}}/overrides/{{branch_id}}", "host": ["{{base_url}}"], "path": ["api","v1","menu","items","{{item_id}}","overrides","{{branch_id}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Menu — Public",
+      "item": [
+        {
+          "name": "Get Public Menu for Branch",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/public/menu/{{branch_id}}", "host": ["{{base_url}}"], "path": ["api","v1","public","menu","{{branch_id}}"] },
+            "description": "No authentication required. Returns active menu items with branch price overrides applied."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "List Orders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders?branch_id={{branch_id}}&status=new&source=dine_in_pos&date_from=2026-04-01&date_to=2026-04-30",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","orders"],
+              "query": [
+                { "key": "branch_id", "value": "{{branch_id}}", "description": "Optional" },
+                { "key": "status", "value": "new", "description": "Optional — new|confirmed|preparing|ready|served|bill_settled|completed|cancelled" },
+                { "key": "source", "value": "dine_in_pos", "description": "Optional — dine_in_pos|takeaway_counter|qr_self_order|delivery_uber_eats|delivery_doordash|delivery_direct|phone" },
+                { "key": "payment_status", "value": "", "description": "Optional — unpaid|paid|partially_refunded|fully_refunded", "disabled": true },
+                { "key": "date_from", "value": "2026-04-01", "description": "Optional — YYYY-MM-DD" },
+                { "key": "date_to", "value": "2026-04-30", "description": "Optional — YYYY-MM-DD" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Order",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var json = pm.response.json();",
+            "if (json.data && json.data.id) {",
+            "  pm.collectionVariables.set('order_id', json.data.id);",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"branch_id\": \"{{branch_id}}\",\n  \"source\": \"dine_in_pos\",\n  \"table_id\": null,\n  \"cover_count\": 2,\n  \"service_charge\": 2.50,\n  \"discount_amount\": 0,\n  \"notes\": \"Allergic to nuts\",\n  \"items\": [\n    {\n      \"menu_item_id\": \"{{item_id}}\",\n      \"item_name\": \"Classic Burger\",\n      \"item_sku\": \"BURGER-01\",\n      \"quantity\": 2,\n      \"unit_price\": 12.50,\n      \"special_instructions\": \"No pickles\",\n      \"modifiers\": [\n        { \"modifier_group_id\": \"{{modifier_group_id}}\", \"modifier_id\": \"\", \"name\": \"Mayo\", \"price_delta\": 0 }\n      ]\n    }\n  ]\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/orders", "host": ["{{base_url}}"], "path": ["api","v1","orders"] },
+            "description": "**Valid sources:** dine_in_pos | takeaway_counter | qr_self_order | delivery_uber_eats | delivery_doordash | delivery_direct | phone\n\nTotal = subtotal + delivery_fee + service_charge − discount_amount"
+          }
+        },
+        {
+          "name": "Get Order",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/orders/{{order_id}}", "host": ["{{base_url}}"], "path": ["api","v1","orders","{{order_id}}"] }
+          }
+        },
+        {
+          "name": "Transition Order Status",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"confirmed\",\n  \"notes\": \"Accepted by kitchen\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/orders/{{order_id}}/status", "host": ["{{base_url}}"], "path": ["api","v1","orders","{{order_id}}","status"] },
+            "description": "**Valid transitions:**\n- new → confirmed | cancelled\n- confirmed → preparing | cancelled\n- preparing → ready | cancelled\n- ready → served | cancelled\n- served → bill_settled\n- bill_settled → completed | cancelled\n\nInvalid transitions return 422."
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"reason_code\": \"customer_request\",\n  \"reason_note\": \"Customer changed their mind\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/orders/{{order_id}}/cancel", "host": ["{{base_url}}"], "path": ["api","v1","orders","{{order_id}}","cancel"] },
+            "description": "**Valid reason_codes:** customer_request | out_of_stock | kitchen_error | payment_failed | delivery_failure | restaurant_closed | other"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Delivery Zones",
+      "item": [
+        {
+          "name": "List Delivery Zones",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/delivery-zones", "host": ["{{base_url}}"], "path": ["api","v1","branches","{{branch_id}}","delivery-zones"] }
+          }
+        },
+        {
+          "name": "Create Delivery Zone",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var json = pm.response.json();",
+            "if (json.data && json.data.id) {",
+            "  pm.collectionVariables.set('delivery_zone_id', json.data.id);",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Zone 1 — Central\",\n  \"geo_type\": \"radius\",\n  \"geo_definition\": {\n    \"lat\": 51.5074,\n    \"lng\": -0.1278,\n    \"radius_km\": 5\n  },\n  \"delivery_fee\": 2.50,\n  \"min_order_value\": 15.00,\n  \"transit_time_minutes\": 30,\n  \"status\": \"active\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/delivery-zones", "host": ["{{base_url}}"], "path": ["api","v1","branches","{{branch_id}}","delivery-zones"] },
+            "description": "**geo_type options:**\n- `radius` — geo_definition: { lat, lng, radius_km }\n- `polygon` — geo_definition: { coordinates: [[lng,lat],...] }\n- `postcode_list` — geo_definition: { postcodes: [\"EC1A\", \"WC2\"] }"
+          }
+        },
+        {
+          "name": "Get Delivery Zone",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/delivery-zones/{{delivery_zone_id}}", "host": ["{{base_url}}"], "path": ["api","v1","branches","{{branch_id}}","delivery-zones","{{delivery_zone_id}}"] }
+          }
+        },
+        {
+          "name": "Update Delivery Zone",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"delivery_fee\": 3.00,\n  \"min_order_value\": 20.00\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/delivery-zones/{{delivery_zone_id}}", "host": ["{{base_url}}"], "path": ["api","v1","branches","{{branch_id}}","delivery-zones","{{delivery_zone_id}}"] }
+          }
+        },
+        {
+          "name": "Pause Delivery Zone",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/delivery-zones/{{delivery_zone_id}}/pause", "host": ["{{base_url}}"], "path": ["api","v1","branches","{{branch_id}}","delivery-zones","{{delivery_zone_id}}","pause"] }
+          }
+        },
+        {
+          "name": "Activate Delivery Zone",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/delivery-zones/{{delivery_zone_id}}/activate", "host": ["{{base_url}}"], "path": ["api","v1","branches","{{branch_id}}","delivery-zones","{{delivery_zone_id}}","activate"] }
+          }
+        },
+        {
+          "name": "Delete Delivery Zone",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{staff_token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/delivery-zones/{{delivery_zone_id}}", "host": ["{{base_url}}"], "path": ["api","v1","branches","{{branch_id}}","delivery-zones","{{delivery_zone_id}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Owners",
+      "description": "Create additional business owners for the authenticated tenant. Requires `owners.manage` permission (owner role only — branch managers are excluded).",
+      "item": [
+        {
+          "name": "Create Additional Owner",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{staff_token}}" },
+              { "key": "Content-Type",   "value": "application/json" },
+              { "key": "Accept",         "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sarah Chen\",\n  \"email\": \"sarah@thegrand.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/staff/owners",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","staff","owners"]
+            },
+            "description": "Creates a new business owner for the authenticated tenant. The new owner receives a welcome email with a temporary password. Email must be unique within this tenant (two different tenants may share the same email). Requires `owners.manage` permission."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Reservations",
+      "item": [
+
+        {
+          "name": "Check Availability",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Accept","value":"application/json"}],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/availability?branch_id={{branch_id}}&date=2026-05-01&party_size=2",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","reservations","availability"],
+              "query": [
+                {"key":"branch_id","value":"{{branch_id}}"},
+                {"key":"date","value":"2026-05-01"},
+                {"key":"party_size","value":"2"},
+                {"key":"duration_minutes","value":"90","disabled":true}
+              ]
+            },
+            "description": "Returns available time slots and tables for the given branch, date, and party size. Uses operating hours (special hours take precedence)."
+          }
+        },
+
+        {
+          "name": "List Reservations",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Accept","value":"application/json"}],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations?branch_id={{branch_id}}&date=2026-05-01",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","reservations"],
+              "query": [
+                {"key":"branch_id","value":"{{branch_id}}"},
+                {"key":"date","value":"2026-05-01"},
+                {"key":"status","value":"confirmed","disabled":true}
+              ]
+            },
+            "description": "List reservations. Filter by branch_id, date, status."
+          }
+        },
+
+        {
+          "name": "Create Reservation",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branch_id\": \"{{branch_id}}\",\n  \"party_size\": 2,\n  \"guest_name\": \"Alice Smith\",\n  \"guest_phone\": \"+447700900001\",\n  \"guest_email\": \"alice@example.com\",\n  \"reservation_date\": \"2026-05-01\",\n  \"reservation_time\": \"19:00\",\n  \"duration_minutes\": 90,\n  \"occasion\": \"birthday\",\n  \"special_requests\": \"Window seat preferred\",\n  \"table_id\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","reservations"]
+            },
+            "description": "Create a reservation. If table_id is provided the table is immediately marked reserved. Reminder jobs are scheduled (SMS stub until Decision 8 confirmed)."
+          }
+        },
+
+        {
+          "name": "Get Reservation",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Accept","value":"application/json"}],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","reservations","{{reservation_id}}"]
+            }
+          }
+        },
+
+        {
+          "name": "Update Reservation",
+          "request": {
+            "method": "PUT",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"party_size\": 3,\n  \"special_requests\": \"Celebrating anniversary\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","reservations","{{reservation_id}}"]
+            }
+          }
+        },
+
+        {
+          "name": "Mark Arrived",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Accept","value":"application/json"}],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/arrive",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","reservations","{{reservation_id}}","arrive"]
+            },
+            "description": "confirmed → arrived"
+          }
+        },
+
+        {
+          "name": "Seat Reservation",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"table_id\": \"{{table_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/seat",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","reservations","{{reservation_id}}","seat"]
+            },
+            "description": "confirmed/arrived → seated. Also transitions table free/reserved → occupied."
+          }
+        },
+
+        {
+          "name": "Complete Reservation",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Accept","value":"application/json"}],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/complete",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","reservations","{{reservation_id}}","complete"]
+            },
+            "description": "seated → completed. Table transitions to needs_cleaning."
+          }
+        },
+
+        {
+          "name": "No Show",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Accept","value":"application/json"}],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/no-show",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","reservations","{{reservation_id}}","no-show"]
+            },
+            "description": "confirmed → no_show. Frees the table and increments customer no_show_count."
+          }
+        },
+
+        {
+          "name": "Cancel Reservation",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Guest called to cancel\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","reservations","{{reservation_id}}","cancel"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Floor Plans",
+      "item": [
+        {
+          "name": "List Floor Plans",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Accept","value":"application/json"}],
+            "url": {
+              "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/floor-plans",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","branches","{{branch_id}}","floor-plans"]
+            }
+          }
+        },
+        {
+          "name": "Create Floor Plan",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Main Floor\",\n  \"layout_data\": {\n    \"width\": 1000,\n    \"height\": 800\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/floor-plans",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","branches","{{branch_id}}","floor-plans"]
+            }
+          }
+        },
+        {
+          "name": "Get Floor Plan",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Accept","value":"application/json"}],
+            "url": {
+              "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/floor-plans/{{floor_plan_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","branches","{{branch_id}}","floor-plans","{{floor_plan_id}}"]
+            },
+            "description": "Returns floor plan with its tables."
+          }
+        },
+        {
+          "name": "Update Floor Plan",
+          "request": {
+            "method": "PUT",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ground Floor\",\n  \"layout_data\": {\n    \"width\": 1200,\n    \"height\": 900\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/floor-plans/{{floor_plan_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","branches","{{branch_id}}","floor-plans","{{floor_plan_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Floor Plan",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Accept","value":"application/json"}],
+            "url": {
+              "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/floor-plans/{{floor_plan_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","branches","{{branch_id}}","floor-plans","{{floor_plan_id}}"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Tables",
+      "item": [
+        {
+          "name": "List Tables",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Accept","value":"application/json"}],
+            "url": {
+              "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/tables",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","branches","{{branch_id}}","tables"],
+              "query": [
+                {"key":"floor_plan_id","value":"{{floor_plan_id}}","disabled":true},
+                {"key":"status","value":"free","disabled":true}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Table",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"floor_plan_id\": \"{{floor_plan_id}}\",\n  \"table_number\": \"T1\",\n  \"capacity_min\": 2,\n  \"capacity_max\": 4,\n  \"position\": { \"x\": 100, \"y\": 200, \"w\": 80, \"h\": 80, \"rotation\": 0 }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/tables",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","branches","{{branch_id}}","tables"]
+            },
+            "description": "New tables are always created with status=free."
+          }
+        },
+        {
+          "name": "Get Table",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Accept","value":"application/json"}],
+            "url": {
+              "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/tables/{{table_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","branches","{{branch_id}}","tables","{{table_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Table",
+          "request": {
+            "method": "PUT",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"table_number\": \"T1A\",\n  \"capacity_max\": 6\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/tables/{{table_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","branches","{{branch_id}}","tables","{{table_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Table",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Accept","value":"application/json"}],
+            "url": {
+              "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/tables/{{table_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","branches","{{branch_id}}","tables","{{table_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Transition Table Status",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"needs_cleaning\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/tables/{{table_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","branches","{{branch_id}}","tables","{{table_id}}","status"]
+            },
+            "description": "Valid transitions: free→reserved/occupied/blocked, reserved→occupied/free/blocked, occupied→needs_cleaning/free, needs_cleaning→free, blocked→free. Returns 409 on invalid transition."
+          }
+        },
+        {
+          "name": "Block Table",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Accept","value":"application/json"}],
+            "url": {
+              "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/tables/{{table_id}}/block",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","branches","{{branch_id}}","tables","{{table_id}}","block"]
+            },
+            "description": "Requires reservations.block_tables permission."
+          }
+        },
+        {
+          "name": "Unblock Table",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Accept","value":"application/json"}],
+            "url": {
+              "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/tables/{{table_id}}/unblock",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","branches","{{branch_id}}","tables","{{table_id}}","unblock"]
+            },
+            "description": "Requires reservations.block_tables permission."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Waitlist",
+      "item": [
+        {
+          "name": "List Waitlist",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Accept","value":"application/json"}],
+            "url": {
+              "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/waitlist",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","branches","{{branch_id}}","waitlist"]
+            },
+            "description": "Returns only waiting entries, ordered by joined_at."
+          }
+        },
+        {
+          "name": "Add to Waitlist",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"guest_name\": \"Bob Jones\",\n  \"guest_phone\": \"+447700900002\",\n  \"party_size\": 3,\n  \"estimated_wait_minutes\": 20\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/waitlist",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","branches","{{branch_id}}","waitlist"]
+            }
+          }
+        },
+        {
+          "name": "Seat from Waitlist",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"table_id\": \"{{table_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/waitlist/{{waitlist_id}}/seat",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","branches","{{branch_id}}","waitlist","{{waitlist_id}}","seat"]
+            },
+            "description": "Seats the party at the given table. Transitions table to occupied."
+          }
+        },
+        {
+          "name": "Party Left Waitlist",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Accept","value":"application/json"}],
+            "url": {
+              "raw": "{{base_url}}/api/v1/branches/{{branch_id}}/waitlist/{{waitlist_id}}/leave",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","branches","{{branch_id}}","waitlist","{{waitlist_id}}","leave"]
+            },
+            "description": "Marks the party as left (they didn't wait)."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Walk-in",
+      "item": [
+        {
+          "name": "Match Walk-in by Phone",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Authorization","value":"Bearer {{staff_token}}"},{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+447700900001\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/walk-in/match",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","walk-in","match"]
+            },
+            "description": "Returns action=match (single profile found), action=create (no match, create new), or action=multiple (host must pick). Phone is normalised to E.164."
+          }
+        }
+      ]
+    }
+
+  ]
+}
