@@ -1,10 +1,19 @@
 # ChefLogik — Next Steps
 
 ## Current State
-- **118 tests passing**
+- **306 tests passing**
 - **Phase 1 Foundation: COMPLETE** ✓
-- **Phase 2, Module 1 — Table & Reservation Management: COMPLETE** ✓
-- Phase 2 remaining modules: not started
+- **Phase 2 — ALL MODULES COMPLETE** ✓
+  - Module 1 — Table & Reservation Management ✓
+  - Module 2 — Customer Profiles & Loyalty ✓
+  - Module 3 — Inventory & Kitchen ✓
+  - Module 4 — Events & Functions ✓
+  - Module 5 — SaaS Tenant Onboarding ✓
+- **Phase 3 — In Progress**
+  - Module 1 — Analytics & Reporting ✓
+  - Module 2 — Dynamic Role Builder ✓
+  - Module 3 — Customer Portal Additions ✓
+  - Module 4 — Platform Admin Panel Enhancements ✓
 
 ---
 
@@ -20,81 +29,64 @@ All Phase 1 deliverables are done and tested.
 Floor plans, tables (state machine), reservations (lifecycle), availability algorithm, waitlist, walk-in matching.
 24 tests passing.
 
----
-
-### 2. Customer Profiles & Loyalty ← START HERE
-
-Customer deduplication across channels, loyalty points earn/redeem, basic tier management.
-Depends on: Orders (points issued on `completed` transition — `IssueLoyaltyPointsJob` already stubbed).
-
-**What it achieves:** A single customer identity across dine-in, takeaway, and delivery. Restaurants can reward repeat customers and run targeted promotions.
-
-**Scope:**
-- Customer signup + login (platform-level, no `tenant_id` on profile)
-- Per-tenant customer profile (`customer_tenant_profiles`): loyalty points, tier, visit history
-- Points earn on order `completed` (wire up `IssueLoyaltyPointsJob` with real logic)
-- Points redeem at order creation
-- Basic tier progression (Bronze / Silver / Gold based on spend)
-- Customer portal endpoints (auth:customer guard)
-
-**Key files:**
-- `docs/modules/customers.md` — full requirements
-- `.claude/skills/customers.md` — implementation patterns
-- `app/Models/CustomerProfile.php` — already exists (platform-level)
-- `app/Models/CustomerTenantProfile.php` — already exists
-- `app/Jobs/Orders/IssueLoyaltyPointsJob.php` — already stubbed, needs real impl
+### ✓ 2. Customer Profiles & Loyalty — DONE
+Customer registration, staff enrollment, loyalty points (earn/redeem/adjust), tier progression, GDPR erasure.
+38 tests passing.
 
 ---
 
-### 3. Inventory & Kitchen
-
-Stock management, WAC costing, KDS ticket flow, waste logging.
-Depends on: Orders (`DeductStockJob` already stubbed, needs real implementation).
-
-**What it achieves:** Kitchen Display System for order tickets, stock tracking to prevent overselling, food cost visibility for managers.
-
-**Scope:**
-- Stock items + recipes (menu item → stock item mappings)
-- WAC (Weighted Average Cost) recalculation on GRN receipt
-- KDS ticket creation on `OrderConfirmed`; acknowledgement with allergen check (30s rule)
-- 86 auto-trigger on stockout (wires back into existing 86 system)
-- Waste log
-- Purchase orders + GRN receipt flow
+### ✓ 3. Inventory & Kitchen — DONE
+Stock items + recipes, WAC costing, KDS ticket flow, DeductStockJob, auto-86 on stockout, waste logging, GRN receipt, purchase orders, stocktakes.
+47 tests passing.
 
 ---
 
-### 4. Events & Functions
-
-Enquiry pipeline, event packages, deposits, event-specific menus.
-
-**What it achieves:** Restaurants can manage private events and functions — from initial enquiry through contract, deposit, event execution, and post-event billing.
-
-**Scope:**
-- Event enquiry creation and pipeline (enquiry → proposal → confirmed → completed)
-- Event packages with pricing
-- Deposit management (stub — Stripe Payment blocked on Decision 7)
-- Event-specific menus
-- Corporate client management
+### ✓ 4. Events & Functions — DONE
+Event spaces, packages, corporate accounts (credit check), enquiry pipeline (enquiry → proposal → confirmed → pre_event → day_of → completed), pre-event task auto-generation, run sheet, deposit stub (Stripe pending Decision 7).
+29 tests passing.
 
 ---
 
-### 5. SaaS Tenant Onboarding
-
-Self-service signup, plan selection, branch setup wizard.
-Depends on: All Phase 1 modules working end-to-end.
-
-**What it achieves:** New restaurants can sign up without manual provisioning. Owner creates account, picks plan, sets up their first branch, and is ready to take orders.
+### ✓ 5. SaaS Tenant Onboarding — DONE
+Self-service signup (public API), plan listing, slug availability check, branch setup wizard, onboarding status tracking.
+17 tests passing.
 
 ---
 
-## Phase 3 — Intelligence & Platform (later)
+## Phase 3 — Intelligence & Platform
 
-- Analytics dashboards (5 dashboards, pre-aggregation jobs, RFM, CLV, churn risk)
-- Dynamic role builder UI
-- Customer portal (loyalty dashboard, GDPR self-service)
-- Platform admin panel (full tenant + subscription management)
-- External integrations (Uber Eats, DoorDash, Twilio, SendGrid — real API calls)
-- Kubernetes manifests + Helm charts
+### ✓ 1. Analytics & Reporting — DONE
+5 dashboards (owner, branch, kitchen, events, customer), 4 pre-aggregation jobs (daily revenue, hourly snapshot, RFM segments, dish performance), RFM scoring, CLV, churn risk.
+17 tests passing.
+
+---
+
+### ✓ 3. Customer Portal Additions — DONE
+Reservation history (list + show, with `?upcoming` and `?status` filters), event booking history (list + show, with `?upcoming` filter). Both enforce ownership — customers can only see their own records. Requires tenant-scoped customer token.
+12 tests passing (CustomerPortalBookingHistoryTest).
+
+---
+
+### ✓ 2. Dynamic Role Builder — DONE
+Role CRUD (list/create/update/delete), permission listing grouped by module, role assignment/revocation on staff members, privilege escalation guard, system-role protection, last-role guard.
+11 new tests passing (RoleAssignmentTest).
+
+Also fixed: `UserRole.branch_ids` now uses a `PostgresUuidArray` cast (correctly serializes PHP arrays to `{uuid1,uuid2}` format for PostgreSQL native UUID[] columns; the previous `'array'` cast silently broke for non-null branch_ids).
+
+### ✓ 4. Platform Admin Panel Enhancements — DONE
+Tenant usage stats, impersonation (1-hour owner token, idempotent, audit logged), suspend/reactivate with audit trail, subscription plan listing.
+`AuditLogger` service created — reusable write-only audit log writer across the codebase.
+17 tests passing (PlatformAdminPanelTest).
+
+### 5. External Integrations ← NEXT
+- **Uber Eats + DoorDash** — real webhook ingestion for platform orders (SyncOrderToPlatformsJob stub already exists)
+- **Twilio SMS** — reservation reminders (RemindReservationJob stubs exist) — blocked on Decision 8
+- **SendGrid email** — password reset, booking confirmations, welcome emails — blocked on Decision 9
+
+### 6. Kubernetes / Helm Charts
+- Kubernetes manifests for app, workers, reverb
+- Helm chart with environment-specific values
+- See `docs/07-infrastructure.md` for the full spec
 
 ---
 
