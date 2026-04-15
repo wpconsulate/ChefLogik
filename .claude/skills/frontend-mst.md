@@ -226,6 +226,63 @@ const PERMISSION_LABELS = {
 } satisfies Record<string, string>;
 ```
 
+## Global Form Field Standard
+
+Every form input in the app must use this exact Tailwind className. Do not create ad-hoc input styles.
+
+```tsx
+<input
+  className="w-full rounded-xl bg-muted border border-transparent px-4 py-3 text-sm text-foreground focus:outline-none focus:border-primary/30 focus:bg-background focus:ring-2 focus:ring-primary/20"
+/>
+```
+
+This applies to `<input>`, `<textarea>`, and `<select>` elements alike.
+
+---
+
+## Theme Switcher Pattern
+
+Themes are stored in a cookie (`cl_theme`) and applied as a `data-theme` attribute on `<html>`. Hydrate **before** the first render in `main.tsx` to avoid flash.
+
+```typescript
+// src/lib/theme.ts
+export type Theme = 'ocean' | 'forest' | 'orange';
+
+export function applyTheme(theme: Theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.cookie = `cl_theme=${theme};path=/;max-age=31536000`;
+}
+
+export function getStoredTheme(): Theme {
+  const match = document.cookie.match(/cl_theme=([^;]+)/);
+  return (match?.[1] as Theme) ?? 'ocean';
+}
+```
+
+Switching is exposed via the `UserMenu.tsx` colour-swatch picker — not a settings page. Supported themes: `ocean` (Navy, default), `forest` (Green), `orange` (Sunrise).
+
+---
+
+## Layout Islands — Do Not Break This Pattern
+
+AppShell uses island layout — sidebar island (fixed `w-56`) + content island (white card). The header is transparent (no bg, no border). `AppFooter.tsx` sits below the content island.
+
+- Never add a top nav bar — the design uses a sidebar-only nav.
+- Never add background/border to the header — it must blend into `#F5F5F5`.
+- Sidebar active state: dark navy pill (`#1A3D63`), not underlines or highlights.
+
+---
+
+## Authentication Page Layout
+
+`LoginPage` and `ForgotPasswordPage` both use a **split-screen** layout:
+- Left 58%: branded panel (logo + tagline + `public/login-bg.png` + gradient overlay)
+- Right 42%: centred form using the global input standard
+
+When building any future auth pages (e.g. reset-password), replicate this same split-screen template.
+
+---
+
 ## Branch Switcher Pattern
 ```typescript
 // The active branch is stored in sessionStorage and sent as X-Branch-Id header

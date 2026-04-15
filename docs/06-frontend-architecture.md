@@ -9,6 +9,82 @@
 
 ---
 
+## Design System & Theming
+
+### Color Tokens (`src/index.css`)
+The app uses a Moniex-inspired Navy palette, not the default shadcn greyscale:
+
+| Token role | Value / description |
+|---|---|
+| App background | Neutral light grey (`#F5F5F5` style) |
+| Cards & islands | Pure white |
+| Primary accent | Steel Blue `#4A7FA7` — sidebar active pills, secondary buttons |
+| Secondary accent | Dark Navy `#1A3D63` — primary buttons, active states |
+| Hover / muted accent | Light Steel Blue `#B3CFE5` |
+
+### Typography
+- **Font**: `Plus Jakarta Sans` (replaces Geist Variable)
+- **Base font size**: `15px`
+- **Heading letter-spacing**: `-0.015em`
+
+### Theme Switcher (`src/lib/theme.ts`)
+Three brand themes are supported, switched dynamically via `data-theme` on `<html>`:
+
+| Theme key | Colour |
+|---|---|
+| `ocean` | Navy Blue (default) |
+| `forest` | Green |
+| `orange` | Sunrise |
+
+Theme selection is persisted in a cookie (`cl_theme`) and hydrated in `main.tsx` **before** the first React render to prevent a flash of unstyled content.
+
+The `UserMenu.tsx` dropdown contains a colour-swatch picker that switches the theme instantly alongside user session info and logout.
+
+---
+
+## Layout — Island Design
+
+### AppShell
+The layout uses a modern "island" pattern — **not** a top-nav bar layout:
+
+- **Sidebar island**: Fixed `w-56` white card with navigation links; dark navy active pill for the selected route.
+- **Content island**: Flexible white card wrapping all page content.
+- **Header**: Transparent (no background, no border) — blends into the page background. Contains search, notification bell, and user menu (`UserMenu.tsx`).
+- **AppFooter** (`components/layout/AppFooter.tsx`): Sits below the content island; contains copyright, terms, privacy, and contact links.
+
+Spacing details: logo slot widened, header height `h-16`, sidebar padding `px-3 py-4`, body layout gaps expanded for a spacious feel.
+
+---
+
+## Authentication Pages
+
+### LoginPage (`pages/auth/`)
+Split-screen layout:
+- **Left panel (58%)**: Branded showcase — ChefLogik logo, marketing tagline, abstract geometric navy background image (`public/login-bg.png`) with gradient overlay.
+- **Right panel (42%)**: Clean centred login form using the global input style (see below). Three fields: email, password, Restaurant ID (`tenant_id`).
+
+### ForgotPasswordPage (`pages/auth/`)
+Same split-screen template as LoginPage. Handles two states:
+1. **Input state** — email address form
+2. **Success state** — "check your inbox" confirmation
+
+Route: `/forgot-password` (configured in `src/routes/forgot-password.tsx` via TanStack Router).
+
+---
+
+## Global Form Field Standard
+
+All form inputs across the app use this Tailwind className pattern:
+
+```
+w-full rounded-xl bg-muted border border-transparent px-4 py-3 text-sm text-foreground
+focus:outline-none focus:border-primary/30 focus:bg-background focus:ring-2 focus:ring-primary/20
+```
+
+Every new form must follow this standard — do not introduce ad-hoc input styles.
+
+---
+
 ## AuthStore — The Foundation
 
 ```typescript
