@@ -62,7 +62,7 @@ GET  /v1/auth/staff/me
 - [x] Branch list page (gated: `branches.view`)
 - [x] Create / edit branch form (gated: `branches.create` / `branches.edit`)
 - [x] Staff list page (gated: `staff.view_all`)
-- [x] Create staff form (gated: `staff.manage` / `staff.create`)
+- [x] Create staff form — `role_id` sent with creation payload; role assignment is atomic (single API call, no separate assign step) (gated: `staff.manage` / `staff.create`)
 - [x] Staff detail — offboard, role assignment / revocation (gated: `roles.assign`)
 - [x] Role list page (gated: `roles.view`)
 - [x] Role create/edit pages with `PermissionPicker` component (gated: `roles.create` / `staff.manage_roles`)

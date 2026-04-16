@@ -127,9 +127,11 @@ DELETE /api/v1/branches/{branch}/hours/{id}   delete special hour
 
 Full staff lifecycle — hire, schedule, clock in/out, offboard.
 
+`POST /api/v1/staff` now accepts `role_id` (required) and optional `branch_ids` — role assignment is atomic with staff creation inside a single DB transaction. No separate role-assign call needed.
+
 ```
 GET    /api/v1/staff                          list staff
-POST   /api/v1/staff                          create staff member
+POST   /api/v1/staff                          create staff member (role_id required)
 GET    /api/v1/staff/{user}                   show staff member
 PUT    /api/v1/staff/{user}                   update staff member
 DELETE /api/v1/staff/{user}                   delete staff member
