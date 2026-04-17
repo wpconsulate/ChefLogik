@@ -74,27 +74,39 @@
 
 ## Decision 7 — Payment Gateway
 
-**Date decided:** PENDING — must be decided before any payment/billing work begins
-**Options:** Stripe (specified in docs), alternatives not evaluated
-**Blocked work:** `order_payments`, `order_payments` refund flow, `events` deposit collection, Stripe webhook endpoint, `subscription_plans.stripe_price_id`
-**Note:** All Stripe-specific columns exist in schema but are nullable until this is confirmed.
+**Date decided:** 2026-04-17
+**Decision:** Stripe (`stripe/stripe-php ^13.0`), implemented behind a `PaymentGatewayInterface` contract so it can be swapped for another provider without touching business logic.
+**Plugin architecture:**
+- `app/Contracts/PaymentGatewayInterface.php` — defines the contract: `createPaymentIntent()`, `capturePayment()`, `cancelPayment()`, `createRefund()`, `constructWebhookEvent()`
+- `app/Services/Payments/StripePaymentGateway.php` — Stripe implementation
+- `config/payment.php` — `driver` key selects the active implementation
+- `AppServiceProvider` binds `PaymentGatewayInterface` → concrete class based on `config('payment.driver')`
+- All business logic (OrderService, EventService, RefundEngine) depends on `PaymentGatewayInterface` only — never imports Stripe classes directly
+**Unblocked work:** `order_payments` recording, full refund engine, events deposit collection, Stripe webhook endpoint, `subscription_plans.stripe_price_id`
 
 ---
 
 ## Decision 8 — SMS Provider
 
-**Date decided:** PENDING — must be decided before any SMS notification work begins
-**Options:** Twilio (specified in docs), alternatives not evaluated
-**Blocked work:** Reservation reminders (24h + 2h), customer password reset via OTP, loyalty campaign SMS, GDPR communication
-**Note:** Customer password reset ships email-only until this is resolved.
+**Date decided:** 2026-04-17
+**Decision:** Twilio (`twilio/sdk ^8.0`), implemented behind a `SmsProviderInterface` contract so it can be swapped for another provider without touching business logic.
+**Plugin architecture:**
+- `app/Contracts/SmsProviderInterface.php` — defines the contract: `send(string $to, string $body): void`
+- `app/Services/Sms/TwilioSmsProvider.php` — Twilio implementation
+- `config/sms.php` — `driver` key selects the active implementation
+- `AppServiceProvider` binds `SmsProviderInterface` → concrete class based on `config('sms.driver')`
+- All business logic (ReservationReminderJob, CustomerPasswordResetService, LoyaltyCampaignJob) depends on `SmsProviderInterface` only — never imports Twilio classes directly
+**Unblocked work:** Reservation reminders (24h + 2h jobs), customer OTP password reset, loyalty campaign SMS dispatch
 
 ---
 
 ## Decision 9 — Email Provider
 
-**Date decided:** PENDING — must be decided before any transactional email work begins
-**Options:** SendGrid (specified in docs), alternatives not evaluated
-**Blocked work:** Staff password reset email, customer password reset email, booking confirmations, loyalty campaign email
+**Date decided:** 2026-04-17
+**Decision:** Amazon SES via Laravel's built-in `ses` mail driver. No additional package required — `aws/aws-sdk-php` is already a transitive dependency of `league/flysystem-aws-s3-v3` (Decision 12).
+**Configuration:** `MAIL_MAILER=ses` in `.env`. Uses the same `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION` credentials as S3. Dedicated `AWS_SES_REGION` override available if SES region differs from S3 region.
+**Laravel mail:** All emails are Laravel Mailables (`php artisan make:mail`). The `ses` driver is the transport — switching to another transport (Mailgun, Postmark, SMTP) requires only a `.env` change, no code changes.
+**Unblocked work:** Staff password reset email, customer password reset email, booking confirmations, tenant welcome email (currently a no-op stub), loyalty campaign email dispatch
 
 ---
 

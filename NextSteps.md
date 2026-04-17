@@ -1,7 +1,7 @@
 # ChefLogik — Next Steps
 
 ## Current State
-- **306 tests passing**
+- **349 tests passing**
 - **Phase 1 Foundation: COMPLETE** ✓
 - **Phase 2 — ALL MODULES COMPLETE** ✓
   - Module 1 — Table & Reservation Management ✓
@@ -14,6 +14,7 @@
   - Module 2 — Dynamic Role Builder ✓
   - Module 3 — Customer Portal Additions ✓
   - Module 4 — Platform Admin Panel Enhancements ✓
+  - Module 5 — Settings / Configuration ✓
 
 ---
 
@@ -78,22 +79,113 @@ Tenant usage stats, impersonation (1-hour owner token, idempotent, audit logged)
 `AuditLogger` service created — reusable write-only audit log writer across the codebase.
 17 tests passing (PlatformAdminPanelTest).
 
-### 5. External Integrations ← NEXT
-- **Uber Eats + DoorDash** — real webhook ingestion for platform orders (SyncOrderToPlatformsJob stub already exists)
-- **Twilio SMS** — reservation reminders (RemindReservationJob stubs exist) — blocked on Decision 8
-- **SendGrid email** — password reset, booking confirmations, welcome emails — blocked on Decision 9
+### ✓ 5. Settings / Configuration — DONE
+Hierarchical role-gated settings (cascade: branch → tenant → platform → default), permission delegation, 30 configurable keys across 7 groups. Hardcoded constants replaced in LoyaltyService, AvailabilityService, OrderService.
+45 tests passing.
 
-### 6. Kubernetes / Helm Charts
+### 6. External Integrations ← NEXT
+
+All three provider decisions are now locked (see `decisions.md`).
+
+#### 6a. Payment — Stripe ← START HERE
+- `app/Contracts/PaymentGatewayInterface.php` — contract
+- `app/Services/Payments/StripePaymentGateway.php` — Stripe implementation
+- `config/payment.php` — driver config
+- Full order payment flow: PaymentIntent creation, webhook ingestion, refund engine
+- Events deposit collection
+- `order_payments` table fully wired
+
+#### 6b. SMS — Twilio (plugin architecture)
+- `app/Contracts/SmsProviderInterface.php` — contract
+- `app/Services/Sms/TwilioSmsProvider.php` — Twilio implementation
+- `config/sms.php` — driver config
+- Reservation reminders (24h + 2h jobs — stubs exist, need real send)
+- Customer OTP password reset
+- Loyalty campaign SMS dispatch
+
+#### 6c. Email — Amazon SES
+- `MAIL_MAILER=ses` — uses existing AWS credentials (no new package)
+- Laravel Mailables: `WelcomeEmail`, `StaffPasswordResetEmail`, `CustomerPasswordResetEmail`, `BookingConfirmationEmail`
+- Loyalty campaign email dispatch
+- Wire the tenant welcome email stub in `TenantProvisioningService`
+
+#### 6d. Uber Eats + DoorDash (after payments)
+- Real webhook ingestion for platform orders
+- `SyncOrderToPlatformsJob` stub already exists
+
+### 7. Kubernetes / Helm Charts
 - Kubernetes manifests for app, workers, reverb
 - Helm chart with environment-specific values
 - See `docs/07-infrastructure.md` for the full spec
 
 ---
 
-## Decisions Still Pending (blockers)
+## Module Gaps — From Full Audit (2026-04-18)
 
-| Decision | Blocks |
-|---|---|
-| Decision 7 — Payment gateway (Stripe not formally confirmed) | Full Stripe payment flow in Orders, refund engine, webhooks |
-| Decision 8 — SMS provider (Twilio not confirmed) | Reservation reminders (stubs shipped), customer OTP, loyalty SMS |
-| Decision 9 — Email provider (SendGrid not confirmed) | Password reset emails, booking confirmations |
+These gaps were identified by comparing all `docs/modules/` specs against the implementation.
+Items blocked by pending decisions (Stripe, SMS, Email) are now unblocked.
+
+### Orders
+- [ ] **Stripe PaymentIntent creation + webhook handler** — PaymentIntent server-side creation, `PaymentIntent.succeeded` webhook, signature verification, idempotency. *(Unblocked — Decision 7 confirmed)*
+- [ ] Pre-paid online orders auto-confirmation after successful PaymentIntent
+- [ ] Delivery platform 5-min auto-confirmation SLA job
+- [ ] `SyncOrderToPlatformsJob` stub → real Uber Eats / DoorDash API calls *(Phase 3)*
+- [ ] Stock restoration on pre-preparation cancellations
+
+### Menu
+- [ ] Sub-categories (Category → Sub-category → Item — only 1 level of categories currently)
+- [ ] `SyncMenuItemToPlatformsJob` stub → real platform sync *(Phase 3)*
+- [ ] SKU ↔ platform `item_id` mapping table
+- [ ] Price verification on incoming platform orders (flag if price differs by > $0.10)
+- [ ] Dietary filters on public QR menu for logged-in customers
+
+### Reservations
+- [ ] No-show deposit requirement flag when `no_show_count >= configurable threshold`
+- [ ] Loyalty member no-show forgiveness (configurable per tier)
+
+### Events
+- [ ] **Stripe deposit collection** — PaymentIntent for event deposits *(Unblocked — Decision 7 confirmed)*
+- [ ] Non-refundable booking fee policy per occasion type
+- [ ] Credit limit enforcement — block new bookings for over-limit net-30 corporate accounts
+- [ ] Run sheet PDF export
+- [ ] Overdue pre-event task alerts via Reverb + push notification
+- [ ] Minimum spend charge prompt at bill close
+
+### Inventory
+- [ ] KDS station assignment — items currently all default to Pass station; need dynamic routing (grill / fryer / cold / pass)
+- [ ] Temperature log export (PDF/CSV for environmental health inspection)
+- [ ] Manager alert when an order contains items whose only recipe is in `draft` status
+
+### Customers & Loyalty
+- [ ] Event booking 2× loyalty multiplier — link event confirmation to `LoyaltyService`
+- [ ] 30-day downgrade grace period warning before tier downgrade
+- [ ] Points expiry warning notification at 12-month inactivity mark
+- [ ] Manual profile merge endpoint (currently raises `DuplicateProfileException` but no merge action)
+
+### Analytics
+- [ ] CLV formula: `avg_spend_per_visit × avg_visits_per_year × estimated_lifespan_years` — field exists but formula not coded
+- [ ] COGS calculation: `opening_stock + purchases - closing_stock`
+- [ ] Tax collected report endpoint (net_sales, tax_rate, tax_amount per category per period)
+- [ ] RevPASH calculation respects special operating hours for affected dates
+
+### Staff
+- [ ] Document expiry alert job — notify 30 days before driving licence / food hygiene / right-to-work expiry
+- [ ] Staff push notification when Branch Manager publishes the weekly schedule
+
+### Cross-module / Notifications (blocked by Decisions 8 & 9)
+- [ ] Reservation reminder SMS (24h + 2h — jobs exist, send is stubbed) *(Unblocked — Decision 8 confirmed)*
+- [ ] Customer OTP / password reset SMS *(Unblocked — Decision 8 confirmed)*
+- [ ] Loyalty campaign SMS dispatch *(Unblocked — Decision 8 confirmed)*
+- [ ] Booking confirmation email *(Unblocked — Decision 9 confirmed)*
+- [ ] Staff / customer password reset email *(Unblocked — Decision 9 confirmed)*
+- [ ] Tenant welcome email in `TenantProvisioningService` *(Unblocked — Decision 9 confirmed)*
+
+---
+
+## Decisions — All Locked ✓
+
+| Decision | Status | Choice |
+|---|---|---|
+| Decision 7 — Payment gateway | ✓ CONFIRMED | Stripe behind `PaymentGatewayInterface` plugin |
+| Decision 8 — SMS provider | ✓ CONFIRMED | Twilio behind `SmsProviderInterface` plugin |
+| Decision 9 — Email provider | ✓ CONFIRMED | Amazon SES via Laravel `ses` mail driver |
