@@ -26,6 +26,11 @@
       "type": "string"
     },
     {
+      "key": "tenant_slug",
+      "value": "the-grand",
+      "type": "string"
+    },
+    {
       "key": "tenant_id",
       "value": "",
       "type": "string"
@@ -834,7 +839,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"owner@thegrand.com\",\n  \"password\": \"password\",\n  \"tenant_id\": \"{{tenant_id}}\"\n}"
+              "raw": "{\n  \"email\": \"owner@thegrand.com\",\n  \"password\": \"password\",\n  \"tenant_slug\": \"{{tenant_slug}}\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/staff/login",
