@@ -1,0 +1,3043 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>ChefLogik — Staff</title><style>/* ChefLogik dashboard — tokens + base styles */
+:root {
+  --accent-50:  #ecfdf5;
+  --accent-100: #d1fae5;
+  --accent-200: #a7f3d0;
+  --accent-500: #10b981;
+  --accent-600: #059669;
+  --accent-700: #047857;
+  --accent-800: #065f46;
+
+  --bg:         #f8f9fa;
+  --surface:    #ffffff;
+  --surface-2:  #f4f5f7;
+  --border:     #e6e8eb;
+  --border-strong: #d4d7dc;
+  --text:       #0f1115;
+  --text-muted: #5b6470;
+  --text-soft:  #8a929c;
+
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger:  #ef4444;
+  --info:    #0ea5e9;
+
+  --radius-sm: 6px;
+  --radius:    8px;
+  --radius-lg: 12px;
+
+  --shadow-xs: 0 1px 1px rgba(15,17,21,.04);
+  --shadow-sm: 0 1px 2px rgba(15,17,21,.06), 0 1px 1px rgba(15,17,21,.04);
+  --shadow-md: 0 4px 10px -2px rgba(15,17,21,.08), 0 2px 4px -2px rgba(15,17,21,.06);
+  --shadow-lg: 0 20px 40px -12px rgba(15,17,21,.18), 0 8px 16px -8px rgba(15,17,21,.10);
+
+  --row-h: 52px;
+  --sidebar-w: 232px;
+
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace;
+}
+
+/* density tweak */
+[data-density="airy"]     { --row-h: 60px; }
+[data-density="balanced"] { --row-h: 52px; }
+[data-density="dense"]    { --row-h: 40px; }
+
+/* sidebar tweak */
+[data-sidebar="compact"] { --sidebar-w: 64px; }
+
+/* accent tweak */
+[data-accent="neutral"] {
+  --accent-50:  #f4f5f7;
+  --accent-100: #e6e8eb;
+  --accent-200: #d4d7dc;
+  --accent-500: #0f1115;
+  --accent-600: #0f1115;
+  --accent-700: #0f1115;
+  --accent-800: #0f1115;
+}
+[data-accent="indigo"] {
+  --accent-50:  #eef2ff;
+  --accent-100: #e0e7ff;
+  --accent-200: #c7d2fe;
+  --accent-500: #6366f1;
+  --accent-600: #4f46e5;
+  --accent-700: #4338ca;
+  --accent-800: #3730a3;
+}
+
+/* Black Glaze — deep forest-black with iris lavender */
+[data-accent="black-glaze"] {
+  --accent-50:  #f2f1f6;
+  --accent-100: #e2e0ec;
+  --accent-200: #c8c5d7;
+  --accent-500: #797693;
+  --accent-600: #475158;
+  --accent-700: #233835;
+  --accent-800: #011814;
+}
+[data-theme="dark"][data-accent="black-glaze"] {
+  --bg:        #011814;
+  --surface:   #0d2420;
+  --surface-2: #15302b;
+  --border:    #233835;
+  --border-strong: #31474a;
+  --accent-50:  #1a3331;
+  --accent-100: #233835;
+  --accent-200: #475158;
+  --accent-500: #a6a3bd;
+  --accent-600: #c8c5d7;
+  --accent-700: #e2e0ec;
+  --accent-800: #f2f1f6;
+}
+
+/* Porcelain — warm neutrals, rosewood + olive */
+[data-accent="porcelain"] {
+  --bg:         #faf6f0;
+  --surface:    #ffffff;
+  --surface-2:  #f2ebe0;
+  --border:     #e6dcce;
+  --border-strong: #cfc8be;
+  --text:       #3a2f2a;
+  --text-muted: #6b5f58;
+  --text-soft:  #9c9088;
+  --accent-50:  #f5ecea;
+  --accent-100: #ead6d2;
+  --accent-200: #d9b9b2;
+  --accent-500: #c4a69b;
+  --accent-600: #a88479;
+  --accent-700: #87655b;
+  --accent-800: #5d423a;
+}
+[data-theme="dark"][data-accent="porcelain"] {
+  --bg:         #1c1815;
+  --surface:    #26201c;
+  --surface-2:  #2d2621;
+  --border:     #3a302a;
+  --border-strong: #4a3f38;
+  --text:       #f0e7db;
+  --text-muted: #c4b5a4;
+  --text-soft:  #8a7e72;
+  --accent-500: #d9b9b2;
+  --accent-600: #c4a69b;
+  --accent-700: #ead6d2;
+  --accent-800: #f5ecea;
+  --accent-50:  #2d2621;
+  --accent-100: #3a302a;
+  --accent-200: #4a3f38;
+}
+
+/* Deep Ocean — cool grey-blues, parisian palette */
+[data-accent="deep-ocean"] {
+  --bg:         #eeeae3;
+  --surface:    #fafbf6;
+  --surface-2:  #e3dfd6;
+  --border:     #d0ccc2;
+  --border-strong: #b0aca2;
+  --text:       #1c2530;
+  --text-muted: #5a6672;
+  --text-soft:  #8a8e92;
+  --accent-50:  #e4e7eb;
+  --accent-100: #c3cbd3;
+  --accent-200: #a9b5c2;
+  --accent-500: #5a7489;
+  --accent-600: #3c5160;
+  --accent-700: #2b3a45;
+  --accent-800: #1c2530;
+}
+[data-theme="dark"][data-accent="deep-ocean"] {
+  --bg:         #111820;
+  --surface:    #1a232d;
+  --surface-2:  #222d38;
+  --border:     #2d3945;
+  --border-strong: #3b4856;
+  --text:       #e4e7eb;
+  --text-muted: #a9b5c2;
+  --text-soft:  #6b7884;
+  --accent-500: #a9b5c2;
+  --accent-600: #c3cbd3;
+  --accent-700: #e4e7eb;
+  --accent-800: #fafbf6;
+  --accent-50:  #222d38;
+  --accent-100: #2d3945;
+  --accent-200: #3c5160;
+}
+
+/* Luna — moonlit blues */
+[data-accent="luna"] {
+  --accent-50:  #e6f3f8;
+  --accent-100: #c7e4ee;
+  --accent-200: #a7ebf2;
+  --accent-500: #54acbf;
+  --accent-600: #26658c;
+  --accent-700: #023859;
+  --accent-800: #011c40;
+}
+[data-theme="dark"][data-accent="luna"] {
+  --bg:         #011c40;
+  --surface:    #023859;
+  --surface-2:  #0a4569;
+  --border:     #155a7e;
+  --border-strong: #26658c;
+  --text:       #e6f3f8;
+  --text-muted: #a7ebf2;
+  --text-soft:  #6ea8bf;
+  --accent-50:  #0a4569;
+  --accent-100: #155a7e;
+  --accent-200: #26658c;
+  --accent-500: #54acbf;
+  --accent-600: #a7ebf2;
+  --accent-700: #c7e4ee;
+  --accent-800: #e6f3f8;
+}
+
+/* Forest — deep green gradient */
+[data-accent="forest"] {
+  --accent-50:  #daf1de;
+  --accent-100: #b5e0be;
+  --accent-200: #8eb69b;
+  --accent-500: #235347;
+  --accent-600: #163832;
+  --accent-700: #0b2b26;
+  --accent-800: #051f20;
+}
+[data-theme="dark"][data-accent="forest"] {
+  --bg:         #051f20;
+  --surface:    #0b2b26;
+  --surface-2:  #163832;
+  --border:     #235347;
+  --border-strong: #2f6a5a;
+  --text:       #daf1de;
+  --text-muted: #8eb69b;
+  --text-soft:  #5c8a72;
+  --accent-50:  #163832;
+  --accent-100: #235347;
+  --accent-200: #2f6a5a;
+  --accent-500: #8eb69b;
+  --accent-600: #b5e0be;
+  --accent-700: #daf1de;
+  --accent-800: #ffffff;
+}
+
+/* dark mode */
+[data-theme="dark"] {
+  --bg:         #0b0d10;
+  --surface:    #14171c;
+  --surface-2:  #1a1e24;
+  --border:     #23282f;
+  --border-strong: #2d333c;
+  --text:       #e7eaee;
+  --text-muted: #9aa3ad;
+  --text-soft:  #6b7380;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
+  --shadow-md: 0 4px 10px -2px rgba(0,0,0,.5);
+  --shadow-lg: 0 20px 40px -12px rgba(0,0,0,.6);
+}
+[data-theme="dark"][data-accent="neutral"] {
+  --accent-500: #e7eaee;
+  --accent-600: #e7eaee;
+  --accent-700: #e7eaee;
+  --accent-800: #e7eaee;
+  --accent-50:  #1a1e24;
+  --accent-100: #23282f;
+  --accent-200: #2d333c;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* layout */
+.app {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  min-height: 100vh;
+  transition: grid-template-columns .18s ease;
+}
+
+/* ---------- SIDEBAR ---------- */
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.brand {
+  display: flex; align-items: center; gap: 10px;
+  padding: 16px 18px;
+  height: 56px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  position: relative;
+}
+.sidebar-collapse-btn { color: var(--text-muted); }
+.sidebar-collapse-btn:hover { color: var(--text); }
+[data-sidebar="compact"] .sidebar-collapse-btn { justify-content: center; padding: 9px; }
+[data-sidebar="compact"] .sidebar-collapse-btn .label { display: none; }
+.brand-mark {
+  width: 26px; height: 26px;
+  border-radius: 7px;
+  background: var(--accent-600);
+  display: grid; place-items: center;
+  color: white; font-weight: 700; font-size: 13px;
+  flex-shrink: 0;
+}
+.brand-name {
+  font-weight: 600; letter-spacing: -0.01em; font-size: 15px;
+}
+[data-sidebar="compact"] .brand-name { display: none; }
+
+.nav {
+  padding: 8px;
+  display: flex; flex-direction: column; gap: 1px;
+  flex: 1;
+  overflow-y: auto;
+}
+.nav-section {
+  padding: 14px 10px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+[data-sidebar="compact"] .nav-section { display: none; }
+
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  border: none; background: transparent; text-align: left;
+  width: 100%;
+  position: relative;
+}
+.nav-item:hover { background: var(--surface-2); color: var(--text); }
+.nav-item.active {
+  background: var(--accent-50);
+  color: var(--accent-700);
+}
+[data-theme="dark"] .nav-item.active { color: var(--accent-200); }
+[data-accent="neutral"] .nav-item.active { color: var(--text); background: var(--surface-2); }
+.nav-item .icon { width: 18px; height: 18px; flex-shrink: 0; }
+.nav-item .count {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-soft);
+  background: var(--surface-2);
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+.nav-item.active .count { background: white; color: var(--accent-700); }
+[data-theme="dark"] .nav-item.active .count { background: var(--surface); }
+[data-sidebar="compact"] .nav-item { justify-content: center; padding: 9px; }
+[data-sidebar="compact"] .nav-item .label,
+[data-sidebar="compact"] .nav-item .count { display: none; }
+
+.sidebar-foot {
+  padding: 10px;
+  border-top: 1px solid var(--border);
+}
+.sidebar-foot-nav {
+  display: flex; flex-direction: column; gap: 1px;
+  margin-bottom: 10px;
+}
+.sidebar-foot-nav:last-child { margin-bottom: 0; }
+.help-card {
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+[data-sidebar="compact"] .help-card { display: none; }
+.help-card-title { font-weight: 600; color: var(--text); margin-bottom: 4px; }
+
+/* ---------- TOPBAR ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  height: 56px;
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  backdrop-filter: saturate(140%) blur(8px);
+  -webkit-backdrop-filter: saturate(140%) blur(8px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 24px;
+  gap: 16px;
+}
+.crumbs {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.crumbs .current { color: var(--text); font-weight: 500; }
+.crumbs .sep { color: var(--text-soft); }
+
+.topbar-search {
+  flex: 1;
+  max-width: 420px;
+  margin-left: auto;
+  position: relative;
+}
+.topbar-search input {
+  width: 100%;
+  height: 34px;
+  padding: 0 12px 0 34px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+}
+.topbar-search input::placeholder { color: var(--text-soft); }
+.topbar-search input:focus {
+  outline: none;
+  border-color: var(--accent-500);
+  box-shadow: 0 0 0 3px var(--accent-100);
+}
+.topbar-search .icon {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; color: var(--text-soft);
+}
+.topbar-search .kbd {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text-soft);
+  border: 1px solid var(--border);
+}
+
+.topbar-actions { display: flex; align-items: center; gap: 6px; }
+.iconbtn {
+  width: 34px; height: 34px;
+  border-radius: var(--radius);
+  display: grid; place-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  position: relative;
+}
+.iconbtn:hover { background: var(--surface-2); color: var(--text); }
+.iconbtn .dot {
+  position: absolute; top: 7px; right: 8px;
+  width: 7px; height: 7px; border-radius: 99px;
+  background: var(--accent-600);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.branch-switch {
+  display: flex; align-items: center; gap: 8px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.branch-switch:hover, .branch-switch.open { background: var(--surface-2); }
+.branch-switch.open { border-color: var(--accent-300); box-shadow: 0 0 0 3px var(--accent-100); }
+.branch-switch .dot {
+  width: 7px; height: 7px; border-radius: 99px;
+  background: var(--success);
+}
+.branch-switch.has-selection .dot { background: var(--accent-600); }
+
+.branch-switch-wrap { position: relative; }
+.branch-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 240px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 6px;
+  z-index: 60;
+  animation: fadeIn 120ms ease-out;
+}
+.branch-menu-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+}
+.branch-menu-item:hover { background: var(--surface-2); }
+.branch-menu-item.active { color: var(--accent-700); }
+.branch-menu-check {
+  width: 16px; height: 16px;
+  display: grid; place-items: center;
+  color: var(--accent-700);
+  flex-shrink: 0;
+}
+.branch-menu-label {
+  flex: 1;
+  display: flex; flex-direction: column;
+  font-size: 13px; font-weight: 500;
+  line-height: 1.25;
+}
+.branch-menu-sub {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+.branch-menu-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  padding: 1px 7px;
+  border-radius: 99px;
+}
+.branch-menu-sep {
+  height: 1px; background: var(--border); margin: 4px 2px;
+}
+.branch-menu-item.clear { color: var(--danger); }
+.branch-menu-item.clear .branch-menu-check { color: var(--danger); }
+.branch-menu-item.clear:hover { background: color-mix(in oklab, var(--danger) 10%, transparent); }
+[data-accent="neutral"] .branch-menu-item.active { color: var(--text); }
+[data-accent="neutral"] .branch-menu-check { color: var(--text); }
+
+/* ---------- MESSAGES DROPDOWN ---------- */
+.msg-wrap { position: relative; }
+.msg-trigger.open { background: var(--surface-2); color: var(--text); }
+.msg-badge {
+  position: absolute;
+  top: 3px; right: 3px;
+  min-width: 15px; height: 15px;
+  padding: 0 4px;
+  border-radius: 99px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 15px;
+  text-align: center;
+  border: 1.5px solid var(--surface);
+}
+.msg-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 60;
+  animation: fadeIn 120ms ease-out;
+  overflow: hidden;
+}
+.msg-menu-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.msg-menu-title {
+  font-size: 13.5px; font-weight: 600; color: var(--text);
+}
+.msg-menu-sub {
+  font-size: 11.5px; color: var(--text-muted); margin-top: 1px;
+}
+.msg-menu-action {
+  border: none; background: transparent;
+  color: var(--accent-700);
+  font-size: 12px; font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+}
+.msg-menu-action:hover { background: var(--surface-2); }
+[data-accent="neutral"] .msg-menu-action { color: var(--text); }
+
+.msg-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+.msg-row {
+  display: flex; gap: 11px;
+  width: 100%;
+  padding: 11px 14px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  font: inherit;
+  color: var(--text);
+}
+.msg-row:last-child { border-bottom: none; }
+.msg-row:hover { background: var(--surface-2); }
+.msg-row.unread { background: color-mix(in oklab, var(--accent-50) 60%, var(--surface)); }
+.msg-row.unread:hover { background: var(--accent-50); }
+[data-accent="neutral"] .msg-row.unread { background: var(--surface-2); }
+
+.msg-avatar {
+  position: relative;
+  flex-shrink: 0;
+}
+.msg-unread-dot {
+  position: absolute;
+  top: -2px; right: -2px;
+  width: 9px; height: 9px;
+  border-radius: 99px;
+  background: var(--accent-600);
+  border: 2px solid var(--surface);
+}
+.msg-row.unread .msg-unread-dot { background: var(--accent-600); }
+[data-accent="neutral"] .msg-unread-dot { background: var(--text); }
+
+.msg-body {
+  flex: 1;
+  min-width: 0;
+  display: flex; flex-direction: column;
+  gap: 2px;
+}
+.msg-row-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 8px;
+}
+.msg-name {
+  font-size: 13px; font-weight: 600;
+  color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.msg-row.unread .msg-name { font-weight: 700; }
+.msg-time {
+  font-size: 11px; color: var(--text-muted);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.msg-channel {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+.msg-preview {
+  font-size: 12.5px;
+  color: var(--text-soft);
+  line-height: 1.4;
+  margin-top: 2px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.msg-row.unread .msg-preview { color: var(--text); }
+
+.msg-menu-foot {
+  border-top: 1px solid var(--border);
+  padding: 6px;
+  background: var(--surface-1, var(--surface));
+}
+.msg-menu-foot-btn {
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  width: 100%;
+  padding: 9px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--accent-700);
+  font: inherit;
+}
+.msg-menu-foot-btn:hover { background: var(--surface-2); }
+[data-accent="neutral"] .msg-menu-foot-btn { color: var(--text); }
+
+.user-chip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 999px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.user-chip:hover, .user-chip.open { background: var(--surface-2); border-color: var(--border); }
+.user-chip .meta { line-height: 1.15; }
+.user-chip .name { font-size: 13px; font-weight: 600; }
+.user-chip .role { font-size: 11.5px; color: var(--text-soft); }
+
+.user-menu-wrap { position: relative; }
+.user-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 280px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 30;
+  overflow: hidden;
+  animation: menuIn .12s ease-out;
+}
+@keyframes menuIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.user-menu-head {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.user-menu-head .name { font-size: 14px; font-weight: 600; color: var(--text); }
+.user-menu-head .email { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+
+.user-menu-section {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.user-menu-section-title {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.theme-swatches {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px 6px;
+}
+.theme-swatch {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  padding: 4px 2px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+.theme-swatch:hover { color: var(--text); }
+.theme-swatch .circle {
+  width: 28px; height: 28px; border-radius: 99px;
+  display: grid; place-items: center;
+  color: white;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.08) inset;
+  transition: box-shadow .12s, transform .12s;
+}
+.theme-swatch.active .circle {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px currentColor;
+}
+.theme-swatch.active { color: var(--accent-600); font-weight: 600; }
+
+.user-menu-items { padding: 6px; }
+.user-menu-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.user-menu-item:hover { background: var(--surface-2); }
+.user-menu-item.danger { color: var(--danger); }
+.user-menu-item .icon { color: var(--text-muted); }
+.user-menu-item.danger .icon { color: var(--danger); }
+
+/* ---------- AVATARS ---------- */
+.avatar {
+  width: 28px; height: 28px;
+  border-radius: 999px;
+  display: grid; place-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  flex-shrink: 0;
+  letter-spacing: 0.01em;
+}
+.avatar.lg { width: 40px; height: 40px; font-size: 14px; }
+.avatar.xl { width: 64px; height: 64px; font-size: 20px; }
+
+/* ---------- MAIN ---------- */
+.main {
+  min-width: 0;
+  display: flex; flex-direction: column;
+}
+.page {
+  padding: 28px 32px 48px;
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+}
+[data-density="dense"] .page { padding: 20px 24px 40px; }
+[data-density="airy"] .page  { padding: 36px 40px 60px; }
+
+.page-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+.page-title {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin: 0;
+  color: var(--text);
+}
+.page-subtitle {
+  margin-top: 4px;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+/* ---------- BUTTONS ---------- */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .12s, border-color .12s, color .12s;
+}
+.btn:hover { background: var(--surface-2); }
+.btn .icon { width: 15px; height: 15px; }
+
+.btn-primary {
+  background: var(--accent-600);
+  border-color: var(--accent-600);
+  color: white;
+  box-shadow: var(--shadow-xs), inset 0 1px 0 rgba(255,255,255,.1);
+}
+.btn-primary:hover { background: var(--accent-700); border-color: var(--accent-700); }
+[data-accent="neutral"] .btn-primary { color: white; }
+[data-theme="dark"][data-accent="neutral"] .btn-primary { color: var(--bg); }
+
+.btn-ghost { border-color: transparent; background: transparent; }
+.btn-ghost:hover { background: var(--surface-2); }
+
+.btn-danger-ghost { color: var(--danger); border-color: transparent; background: transparent; }
+.btn-danger-ghost:hover { background: color-mix(in srgb, var(--danger) 10%, transparent); }
+
+.btn.sm { height: 28px; font-size: 12.5px; padding: 0 9px; }
+
+/* ---------- STAT CARDS ---------- */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+}
+.stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+  display: flex; align-items: center; gap: 6px;
+}
+.stat-label .icon { width: 14px; height: 14px; }
+.stat-value {
+  display: flex; align-items: baseline; gap: 8px;
+  margin-top: 6px;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.stat-delta {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+.stat-delta.up { color: var(--accent-700); background: var(--accent-50); }
+.stat-delta.down { color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, transparent); }
+.stat-trend { margin-top: 10px; height: 28px; width: 100%; }
+
+/* ---------- TABS ---------- */
+.tabs {
+  display: flex; align-items: center; gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.tab {
+  background: transparent;
+  border: none;
+  padding: 9px 12px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  display: flex; align-items: center; gap: 8px;
+}
+.tab:hover { color: var(--text); }
+.tab.active {
+  color: var(--text);
+  border-bottom-color: var(--accent-600);
+}
+.tab .pill {
+  font-size: 11px;
+  background: var(--surface-2);
+  padding: 1px 6px;
+  border-radius: 999px;
+  color: var(--text-muted);
+}
+.tab.active .pill { background: var(--accent-100); color: var(--accent-700); }
+[data-accent="neutral"] .tab.active .pill { background: var(--surface-2); color: var(--text); }
+
+/* ---------- TOOLBAR ---------- */
+.toolbar {
+  display: flex; align-items: center; gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 0 14px;
+}
+.toolbar .left, .toolbar .right { display: flex; align-items: center; gap: 8px; }
+.toolbar .right { margin-left: auto; }
+
+.field {
+  display: flex; align-items: center;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 13px;
+  color: var(--text);
+  gap: 8px;
+  min-width: 0;
+}
+.field .icon { width: 15px; height: 15px; color: var(--text-soft); }
+.field input, .field select {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 13px;
+  color: var(--text);
+  width: 100%;
+  min-width: 0;
+}
+.field.w-search { width: 260px; }
+.field:focus-within {
+  border-color: var(--accent-500);
+  box-shadow: 0 0 0 3px var(--accent-100);
+}
+
+/* segmented */
+.segment {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.segment button {
+  border: none;
+  background: transparent;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 4px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.segment button.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-xs);
+}
+.segment .chip {
+  font-size: 10.5px;
+  padding: 0 5px;
+  height: 15px; line-height: 15px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+.segment button.active .chip {
+  background: var(--accent-100); color: var(--accent-700);
+}
+[data-accent="neutral"] .segment button.active .chip { background: var(--surface-2); color: var(--text); }
+
+/* ---------- TABLE ---------- */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.table thead th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--text-muted);
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  padding: 10px 14px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+}
+.table thead th.sortable { cursor: pointer; user-select: none; }
+.table thead th.sortable:hover { color: var(--text); }
+.table thead th .sort {
+  display: inline-flex; flex-direction: column;
+  margin-left: 4px;
+  vertical-align: middle;
+  color: var(--text-soft);
+}
+.table thead th.sorted-asc .sort .up,
+.table thead th.sorted-desc .sort .down { color: var(--text); }
+
+.table tbody td {
+  padding: 0 14px;
+  height: var(--row-h);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  color: var(--text);
+}
+.table tbody tr:last-child td { border-bottom: none; }
+.table tbody tr {
+  transition: background .08s;
+}
+.table tbody tr:hover { background: var(--surface-2); cursor: pointer; }
+.table tbody tr.selected { background: var(--accent-50); }
+[data-theme="dark"] .table tbody tr.selected { background: color-mix(in srgb, var(--accent-600) 14%, transparent); }
+
+.table .checkbox-col { width: 40px; padding-right: 0; }
+.table .actions-col  { width: 120px; text-align: right; }
+
+.name-cell {
+  display: flex; align-items: center; gap: 10px;
+}
+.name-cell .main {
+  display: flex; flex-direction: column; line-height: 1.2;
+  min-width: 0;
+}
+.name-cell .name {
+  font-weight: 500; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.name-cell .you-tag {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 10.5px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--accent-100);
+  color: var(--accent-700);
+  font-weight: 500;
+  vertical-align: middle;
+}
+[data-accent="neutral"] .name-cell .you-tag { background: var(--surface-2); color: var(--text); }
+.name-cell .sub {
+  font-size: 12px; color: var(--text-soft);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.row-actions {
+  display: flex; justify-content: flex-end; gap: 2px;
+  opacity: 0;
+  transition: opacity .1s;
+}
+.table tbody tr:hover .row-actions { opacity: 1; }
+.row-actions .iconbtn { width: 28px; height: 28px; }
+.row-actions .iconbtn .icon { width: 15px; height: 15px; }
+
+/* chip / badges */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 500;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+.chip .role-dot {
+  width: 6px; height: 6px; border-radius: 99px;
+  background: var(--text-soft);
+}
+.status {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 500;
+}
+.status-dot { width: 7px; height: 7px; border-radius: 99px; background: var(--text-soft); }
+.status.active   .status-dot { background: var(--success); box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 20%, transparent); }
+.status.inactive .status-dot { background: var(--text-soft); }
+.status.invited  .status-dot { background: var(--warning); box-shadow: 0 0 0 3px color-mix(in srgb, var(--warning) 20%, transparent); }
+.status.active   { color: var(--text); }
+.status.inactive { color: var(--text-muted); }
+.status.invited  { color: var(--text); }
+
+/* checkbox */
+.checkbox {
+  width: 16px; height: 16px;
+  border-radius: 4px;
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface);
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.checkbox.checked,
+.checkbox.indeterminate {
+  background: var(--accent-600); border-color: var(--accent-600);
+}
+[data-accent="neutral"][data-theme="dark"] .checkbox.checked,
+[data-accent="neutral"][data-theme="dark"] .checkbox.indeterminate { background: var(--accent-500); border-color: var(--accent-500); color: var(--bg); }
+.checkbox svg { color: white; width: 12px; height: 12px; }
+[data-accent="neutral"][data-theme="dark"] .checkbox svg { color: var(--bg); }
+
+/* ---------- BULK BAR ---------- */
+.bulk-bar {
+  position: sticky; bottom: 20px; z-index: 5;
+  margin: 12px auto 0;
+  width: fit-content;
+  background: var(--text);
+  color: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 8px 10px 8px 16px;
+  box-shadow: var(--shadow-lg);
+  display: flex; align-items: center; gap: 12px;
+  font-size: 13px;
+}
+[data-theme="dark"] .bulk-bar { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+.bulk-bar .btn {
+  background: transparent;
+  color: var(--surface);
+  border-color: color-mix(in srgb, var(--surface) 22%, transparent);
+  height: 28px; padding: 0 10px;
+}
+[data-theme="dark"] .bulk-bar .btn { color: var(--text); border-color: var(--border); }
+.bulk-bar .btn:hover { background: color-mix(in srgb, var(--surface) 12%, transparent); }
+.bulk-bar .close { opacity: 0.8; cursor: pointer; }
+
+/* ---------- PAGINATION ---------- */
+.pagination {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+.pager {
+  display: flex; align-items: center; gap: 2px;
+}
+.pager .btn.sm { border-color: transparent; background: transparent; }
+.pager .btn.sm:hover { background: var(--surface-2); }
+.pager .page-num {
+  min-width: 28px; height: 28px;
+  border-radius: var(--radius-sm);
+  display: inline-grid; place-items: center;
+  font-size: 12.5px; font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.pager .page-num:hover { background: var(--surface-2); color: var(--text); }
+.pager .page-num.active { background: var(--text); color: var(--surface); }
+[data-theme="dark"] .pager .page-num.active { background: var(--surface-2); color: var(--text); border-color: var(--border-strong); }
+
+/* ---------- DETAIL PANEL ---------- */
+.panel-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15,17,21,0.28);
+  z-index: 20;
+  opacity: 0; pointer-events: none;
+  transition: opacity .18s ease;
+}
+.panel-overlay.open { opacity: 1; pointer-events: auto; }
+.panel {
+  position: fixed; right: 0; top: 0; bottom: 0;
+  width: min(540px, 100vw);
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  z-index: 21;
+  transform: translateX(100%);
+  transition: transform .22s ease;
+  display: flex; flex-direction: column;
+  box-shadow: var(--shadow-lg);
+}
+.panel.open { transform: translateX(0); }
+.panel-head {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+.panel-head .panel-close { margin-left: auto; }
+.panel-body { flex: 1; overflow-y: auto; padding: 20px; }
+.panel-foot {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+  justify-content: flex-end;
+  background: var(--surface);
+}
+
+.kv-grid {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  row-gap: 10px;
+  column-gap: 16px;
+  font-size: 13.5px;
+}
+.kv-grid dt { color: var(--text-muted); font-weight: 400; }
+.kv-grid dd { margin: 0; color: var(--text); }
+
+.panel-section {
+  margin-top: 24px;
+}
+.panel-section h4 {
+  font-size: 12px; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--text-soft);
+  margin: 0 0 10px;
+}
+.timeline { display: flex; flex-direction: column; gap: 10px; }
+.timeline-item {
+  display: flex; gap: 10px; align-items: flex-start;
+  font-size: 13px;
+}
+.timeline-dot {
+  width: 8px; height: 8px; border-radius: 99px;
+  background: var(--text-soft);
+  margin-top: 5px; flex-shrink: 0;
+}
+.timeline-item .when { color: var(--text-soft); font-size: 12px; }
+
+/* ---------- EMPTY / ERROR ---------- */
+.empty {
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--text-muted);
+}
+.empty .title { font-size: 15px; color: var(--text); font-weight: 600; margin-bottom: 4px; }
+.empty .icon-wrap {
+  width: 42px; height: 42px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  display: grid; place-items: center;
+  margin: 0 auto 10px;
+  color: var(--text-soft);
+}
+
+/* ---------- TWEAKS ---------- */
+.tweaks {
+  position: fixed;
+  right: 16px; bottom: 16px;
+  width: 260px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 12px 14px 14px;
+  z-index: 50;
+  font-size: 12.5px;
+  display: none;
+}
+.tweaks.open { display: block; }
+.tweaks h5 { margin: 0 0 2px; font-size: 13px; font-weight: 600; }
+.tweaks .sub { font-size: 11.5px; color: var(--text-soft); margin-bottom: 10px; }
+.tweak-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+.tweak-row label { color: var(--text-muted); font-weight: 500; }
+.tweak-row .segment { width: 100%; }
+.tweak-row .segment button { flex: 1; text-align: center; justify-content: center; }
+
+.density-segment { display: flex; width: 100%; }
+.density-segment button { flex: 1; text-align: center; justify-content: center; }
+
+.swatch-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+.swatch-btn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+}
+.swatch-btn:hover { background: var(--surface-2); }
+.swatch-btn.active {
+  border-color: var(--accent-500);
+  box-shadow: 0 0 0 2px var(--accent-100);
+}
+.swatch-dot {
+  width: 12px; height: 12px; border-radius: 99px;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.08) inset;
+}
+.tweak-close {
+  position: absolute; top: 8px; right: 8px;
+  background: transparent; border: none; cursor: pointer; color: var(--text-soft);
+}
+
+/* toast */
+.toast {
+  position: fixed; bottom: 20px; left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: var(--text);
+  color: var(--surface);
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  z-index: 100;
+  opacity: 0; pointer-events: none;
+  transition: opacity .15s, transform .15s;
+  box-shadow: var(--shadow-lg);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+[data-theme="dark"] .toast { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+
+/* ---------- DASHBOARD GRID ---------- */
+.dash-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+}
+.card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.card-title { font-size: 14px; font-weight: 600; margin: 0; letter-spacing: -0.005em; }
+.card-sub { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
+
+.activity-list { display: flex; flex-direction: column; }
+.activity-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--border);
+  font-size: 13px;
+}
+.activity-item:last-child { border-bottom: none; }
+.activity-item .when { margin-left: auto; color: var(--text-soft); font-size: 12px; white-space: nowrap; }
+
+/* Orders status chips */
+.ostatus {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 2px 8px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 500;
+}
+.ostatus.new        { background: var(--accent-50);  color: var(--accent-700); }
+.ostatus.preparing  { background: color-mix(in srgb, var(--warning) 16%, transparent); color: #92550b; }
+.ostatus.served     { background: color-mix(in srgb, var(--info) 14%, transparent); color: #0369a1; }
+.ostatus.paid       { background: var(--surface-2); color: var(--text-muted); }
+[data-theme="dark"] .ostatus.preparing { color: #fbbf24; }
+[data-theme="dark"] .ostatus.served { color: #7dd3fc; }
+
+/* mini skeleton / spark */
+svg.spark path { fill: none; stroke-width: 2; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; border: 2px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover { background: var(--text-soft); }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* responsive-ish */
+@media (max-width: 1100px) {
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .dash-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .app { grid-template-columns: 64px 1fr; }
+  :root { --sidebar-w: 64px; }
+  .brand-name, .nav-item .label, .nav-item .count, .nav-section, .help-card { display: none; }
+  .topbar-search { max-width: 180px; }
+  .page { padding: 20px 16px 40px; }
+}
+</style></head>
+<body><div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script>// Mock data for ChefLogik dashboard
+(function () {
+  const FIRST = ['Emma','Liam','Olivia','Noah','Ava','Ethan','Sophia','Mason','Isabella','Logan','Mia','Lucas','Amelia','Oliver','Harper','Elijah','Evelyn','James','Abigail','Benjamin','Emily','Alexander','Ella','William','Scarlett','Daniel','Grace','Henry','Chloe','Jack','Victoria','Owen','Riley','Samuel','Aria','Wyatt','Lily','Jackson','Zoey','Levi','Hannah','Sebastian','Layla','David','Nora','Carter','Penelope','Julian','Camila','Anthony'];
+  const LAST  = ['Chen','Patel','Rodriguez','Kim','Nguyen','Johnson','Garcia','Smith','Martinez','Lee','Brown','Davis','Wilson','Taylor','Anderson','Thomas','Moore','Jackson','Martin','Thompson','White','Harris','Clark','Lewis','Walker','Hall','Allen','Young','King','Wright','Lopez','Hill','Scott','Green','Adams','Baker','Nelson','Carter','Mitchell','Perez','Roberts','Turner','Phillips','Campbell','Parker','Evans','Edwards','Collins','Stewart','Sanchez'];
+  const ROLES = [
+    { id: 'owner',     name: 'Owner',         color: '#7c3aed' },
+    { id: 'manager',   name: 'Manager',       color: '#0ea5e9' },
+    { id: 'head-chef', name: 'Head Chef',     color: '#f97316' },
+    { id: 'sous-chef', name: 'Sous Chef',     color: '#f59e0b' },
+    { id: 'line-cook', name: 'Line Cook',     color: '#10b981' },
+    { id: 'server',    name: 'Server',        color: '#06b6d4' },
+    { id: 'host',      name: 'Host',          color: '#8b5cf6' },
+    { id: 'bartender', name: 'Bartender',     color: '#ef4444' },
+    { id: 'busser',    name: 'Busser',        color: '#64748b' },
+  ];
+  const BRANCHES = [
+    { id: 'downtown',  name: 'Downtown',        city: 'San Francisco' },
+    { id: 'mission',   name: 'Mission',         city: 'San Francisco' },
+    { id: 'oakland',   name: 'Oakland',         city: 'Oakland' },
+    { id: 'berkeley',  name: 'Berkeley',        city: 'Berkeley' },
+  ];
+
+  // Deterministic pseudo-random so layout is stable across reloads
+  let seed = 7;
+  function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+  function pick(arr) { return arr[Math.floor(rnd() * arr.length)]; }
+
+  const STAFF = [];
+  // Anchor the first few to match the original screenshot
+  const anchors = [
+    { first: 'Emma', last: 'Chen', email: 'emma@blueelephant.com', role: 'owner', branch: 'downtown', status: 'active', isYou: true },
+    { first: 'Marcus', last: 'Okafor', email: 'headchef1@blueelephant.com', role: 'head-chef', branch: 'downtown', status: 'active' },
+    { first: 'Priya', last: 'Shah', email: 'manager1@blueelephant.com', role: 'manager', branch: 'mission', status: 'active' },
+  ];
+  anchors.forEach(a => STAFF.push({
+    id: 'u' + (STAFF.length + 1),
+    firstName: a.first, lastName: a.last,
+    email: a.email,
+    phone: '(415) 555-01' + String(10 + STAFF.length).slice(-2),
+    role: a.role, branch: a.branch, status: a.status,
+    startedAt: '2023-0' + (1 + (STAFF.length % 8)) + '-15',
+    lastActive: hoursAgo(STAFF.length),
+    isYou: !!a.isYou,
+    payRate: [45, 38, 32][STAFF.length] || 22,
+    hoursThisWeek: 32 + STAFF.length,
+  }));
+
+  // Fill to 58 more
+  for (let i = 0; i < 58; i++) {
+    const first = pick(FIRST);
+    const last  = pick(LAST);
+    const role  = pick(ROLES.slice(1)); // not owner
+    const branch = pick(BRANCHES);
+    const stat  = rnd() < 0.82 ? 'active' : (rnd() < 0.5 ? 'inactive' : 'invited');
+    STAFF.push({
+      id: 'u' + (STAFF.length + 1),
+      firstName: first, lastName: last,
+      email: `${first.toLowerCase()}.${last.toLowerCase()}@blueelephant.com`,
+      phone: '(415) 555-' + String(1000 + Math.floor(rnd() * 8999)).slice(-4),
+      role: role.id, branch: branch.id,
+      status: stat,
+      startedAt: `202${3 + Math.floor(rnd()*3)}-${String(1+Math.floor(rnd()*12)).padStart(2,'0')}-${String(1+Math.floor(rnd()*28)).padStart(2,'0')}`,
+      lastActive: hoursAgo(Math.floor(rnd() * 400)),
+      payRate: 18 + Math.floor(rnd() * 30),
+      hoursThisWeek: Math.floor(rnd() * 45),
+    });
+  }
+
+  function hoursAgo(h) {
+    const d = new Date();
+    d.setHours(d.getHours() - h);
+    return d.toISOString();
+  }
+
+  // Orders mock (for stub page)
+  const ORDERS = [];
+  for (let i = 0; i < 24; i++) {
+    ORDERS.push({
+      id: '#' + (10482 - i),
+      guest: pick(FIRST) + ' ' + pick(LAST).charAt(0) + '.',
+      table: 'T' + (1 + Math.floor(rnd() * 24)),
+      items: 1 + Math.floor(rnd() * 8),
+      total: (20 + rnd() * 180).toFixed(2),
+      status: pick(['preparing','served','paid','new','preparing','served']),
+      branch: pick(BRANCHES).id,
+      opened: Math.floor(rnd() * 120) + 'm ago',
+    });
+  }
+
+  // --- Message threads (for topbar preview) ---
+  const MESSAGES = [
+    {
+      id: 'm1',
+      person: STAFF.find(s => s.first === 'Marcus' && s.last === 'Okafor') || STAFF[1],
+      preview: 'Line 3 is backed up on the duck confit — can we 86 it for tonight?',
+      time: '2m',
+      unread: true,
+      channel: 'Kitchen • Downtown',
+    },
+    {
+      id: 'm2',
+      person: STAFF.find(s => s.first === 'Priya' && s.last === 'Shah') || STAFF[2],
+      preview: 'Uploaded the Q2 labor-cost sheet. Numbers look better than we thought.',
+      time: '18m',
+      unread: true,
+      channel: 'Managers',
+    },
+    {
+      id: 'm3',
+      person: STAFF[4] || STAFF[0],
+      preview: 'Can you approve my shift swap with Jordan on Sat?',
+      time: '1h',
+      unread: true,
+      channel: 'Direct',
+    },
+    {
+      id: 'm4',
+      person: STAFF[6] || STAFF[0],
+      preview: 'Order #4412 was comped — attaching the manager note.',
+      time: '3h',
+      unread: false,
+      channel: 'Front of House',
+    },
+    {
+      id: 'm5',
+      person: STAFF[9] || STAFF[0],
+      preview: 'New supplier quote for produce is ready for review.',
+      time: 'Yesterday',
+      unread: false,
+      channel: 'Inventory',
+    },
+  ];
+
+  window.CL_DATA = { STAFF, ROLES, BRANCHES, ORDERS, MESSAGES };
+})();
+</script>
+<script type="text/babel">// Lightweight icon library (stroke-based, inherits currentColor)
+const Icon = ({ name, size = 16, stroke = 1.75, className = '', style }) => {
+  const common = {
+    width: size, height: size,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: stroke,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    className: 'icon ' + className,
+    style,
+    'aria-hidden': true,
+  };
+  const paths = {
+    dashboard: <><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></>,
+    orders:    <><path d="M3 6h2l2.5 10.5a2 2 0 0 0 2 1.5h7.5a2 2 0 0 0 2-1.4L21 10H6"/><circle cx="10" cy="20" r="1.2"/><circle cx="17" cy="20" r="1.2"/></>,
+    menu:      <><path d="M6 3v18"/><path d="M6 11c2 0 3-1.5 3-4S8 3 6 3"/><path d="M14 3c-1.5 0-2 1-2 3s1 3 3 3h3"/><path d="M18 3v18"/></>,
+    reservations: <><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M8 3v4"/><path d="M16 3v4"/></>,
+    events:    <><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></>,
+    inventory: <><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/></>,
+    customers: <><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="7" r="2.5"/><path d="M21 17.5c0-2.5-1.7-4.5-4-4.9"/></>,
+    staff:     <><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c.5-4 3.5-6 7.5-6s7 2 7.5 6"/></>,
+    shifts:    <><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M7 13h3v3H7z"/><path d="M14 13h3v3h-3z"/></>,
+    attendance:<><path d="M4 7h16"/><path d="M4 12h10"/><path d="M4 17h6"/><path d="m16 14 2 2 4-4"/></>,
+    branches:  <><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M10 21v-6h4v6"/></>,
+    analytics: <><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-8"/><path d="M22 20H2"/></>,
+    settings:  <><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.7l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.7-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.7.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.7 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.7.3h0a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5h0a1.6 1.6 0 0 0 1.7-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.7v0a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></>,
+    search:    <><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></>,
+    bell:      <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></>,
+    message:   <><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></>,
+    chevronDown: <path d="m6 9 6 6 6-6"/>,
+    chevronLeft: <path d="m15 18-6-6 6-6"/>,
+    chevronRight:<path d="m9 18 6-6-6-6"/>,
+    chevronUp:   <path d="m6 15 6-6 6 6"/>,
+    chevronsUpDown: <><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></>,
+    plus:      <><path d="M12 5v14"/><path d="M5 12h14"/></>,
+    filter:    <><path d="M3 5h18l-7 9v6l-4-2v-4z"/></>,
+    download:  <><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></>,
+    upload:    <><path d="M12 21V9"/><path d="m7 14 5-5 5 5"/><path d="M5 3h14"/></>,
+    eye:       <><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></>,
+    pencil:    <><path d="M17 3a2.8 2.8 0 1 1 4 4L8 20l-5 1 1-5z"/></>,
+    trash:     <><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6"/><path d="M14 11v6"/></>,
+    more:      <><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></>,
+    userAdd:   <><circle cx="9" cy="8" r="3.5"/><path d="M3 20c.5-3.5 3-6 6-6s5.5 2.5 6 6"/><path d="M19 8v6"/><path d="M16 11h6"/></>,
+    mail:      <><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></>,
+    phone:     <><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.6a2 2 0 0 1-.5 2.1L8 9.6a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.4c.8.3 1.7.5 2.6.6a2 2 0 0 1 1.7 2z"/></>,
+    check:     <path d="m5 12 5 5 10-11"/>,
+    x:         <><path d="m6 6 12 12"/><path d="M18 6 6 18"/></>,
+    minus:     <path d="M5 12h14"/>,
+    dot:       <circle cx="12" cy="12" r="3"/>,
+    calendar:  <><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M8 3v4"/><path d="M16 3v4"/></>,
+    clock:     <><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></>,
+    tag:       <><path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.2"/></>,
+    arrowUp:   <><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></>,
+    arrowDown: <><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></>,
+    sliders:   <><path d="M4 6h10"/><path d="M18 6h2"/><path d="M4 12h4"/><path d="M12 12h8"/><path d="M4 18h12"/><path d="M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></>,
+    command:   <><path d="M18 6a3 3 0 1 0-3 3h3"/><path d="M6 6a3 3 0 1 1 3 3H6"/><path d="M18 18a3 3 0 1 1-3-3h3"/><path d="M6 18a3 3 0 1 0 3-3H6"/><path d="M9 9h6v6H9z"/></>,
+    externalLink: <><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></>,
+    sun:       <><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.9 4.9 1.4 1.4"/><path d="m17.7 17.7 1.4 1.4"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m4.9 19.1 1.4-1.4"/><path d="m17.7 6.3 1.4-1.4"/></>,
+    moon:      <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>,
+    shield:    <path d="M12 2 4 5v7c0 5 4 9 8 10 4-1 8-5 8-10V5z"/>,
+  };
+  return <svg {...common}>{paths[name] || null}</svg>;
+};
+
+// Avatar color palette — hash name to stable color
+const AVATAR_COLORS = ['#10b981','#0ea5e9','#6366f1','#f97316','#ef4444','#8b5cf6','#14b8a6','#f59e0b','#ec4899','#64748b'];
+function avatarColor(seed) {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+const Avatar = ({ person, size = 'md' }) => {
+  const name = (person.firstName || '') + ' ' + (person.lastName || '');
+  const initials = (person.firstName?.[0] || '') + (person.lastName?.[0] || '');
+  const cls = size === 'lg' ? 'avatar lg' : size === 'xl' ? 'avatar xl' : 'avatar';
+  return (
+    <div className={cls} style={{ background: avatarColor(name) }} title={name}>
+      {initials.toUpperCase()}
+    </div>
+  );
+};
+
+const Checkbox = ({ checked, indeterminate, onChange }) => {
+  const cls = 'checkbox' + (checked ? ' checked' : '') + (indeterminate && !checked ? ' indeterminate' : '');
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={indeterminate ? 'mixed' : !!checked}
+      className={cls}
+      onClick={(e) => { e.stopPropagation(); onChange?.(!checked); }}
+    >
+      {checked && <Icon name="check" size={12} stroke={3} />}
+      {indeterminate && !checked && <Icon name="minus" size={12} stroke={3} />}
+    </button>
+  );
+};
+
+const Sparkline = ({ values = [], color = 'var(--accent-600)', fill = true, height = 28 }) => {
+  if (!values.length) return null;
+  const w = 120, h = height;
+  const min = Math.min(...values), max = Math.max(...values);
+  const range = max - min || 1;
+  const step = w / (values.length - 1 || 1);
+  const pts = values.map((v, i) => [i * step, h - ((v - min) / range) * (h - 4) - 2]);
+  const d = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+  const area = d + ` L ${w.toFixed(1)},${h} L 0,${h} Z`;
+  return (
+    <svg className="spark" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ width: '100%', height: h + 'px' }}>
+      {fill && <path d={area} fill={color} fillOpacity="0.12" stroke="none" />}
+      <path d={d} stroke={color} />
+    </svg>
+  );
+};
+
+// attach globally
+Object.assign(window, { Icon, Avatar, Checkbox, Sparkline, avatarColor });
+</script>
+<script type="text/babel">// Sidebar + Topbar + Layout shell
+
+const NAV_ITEMS = [
+  { id: 'dashboard',    label: 'Dashboard',    icon: 'dashboard' },
+  { id: 'orders',       label: 'Orders',       icon: 'orders',    count: 14 },
+  { id: 'menu',         label: 'Menu',         icon: 'menu' },
+  { id: 'reservations', label: 'Reservations', icon: 'reservations', count: 32 },
+  { id: 'events',       label: 'Events',       icon: 'events' },
+  { id: 'inventory',    label: 'Inventory',    icon: 'inventory' },
+  { id: 'customers',    label: 'Customers',    icon: 'customers' },
+];
+const NAV_ITEMS_2 = [
+  { id: 'staff',      label: 'Staff',      icon: 'staff' },
+  { id: 'shifts',     label: 'Shifts',     icon: 'shifts' },
+  { id: 'attendance', label: 'Attendance', icon: 'attendance' },
+];
+const NAV_ITEMS_3 = [
+  { id: 'branches',  label: 'Branches',  icon: 'branches' },
+  { id: 'analytics', label: 'Analytics', icon: 'analytics' },
+  { id: 'settings',  label: 'Settings',  icon: 'settings' },
+];
+
+const Sidebar = ({ page, onNav, sidebar, onToggleSidebar }) => {
+  const renderItem = (it) => (
+    <button
+      key={it.id}
+      className={'nav-item' + (page === it.id ? ' active' : '')}
+      onClick={() => onNav(it.id)}
+      title={it.label}
+    >
+      <Icon name={it.icon} size={17} stroke={1.7} />
+      <span className="label">{it.label}</span>
+      {it.count != null && <span className="count">{it.count}</span>}
+    </button>
+  );
+  return (
+    <aside className="sidebar">
+      <div className="brand">
+        <div className="brand-mark">C</div>
+        <div className="brand-name">ChefLogik</div>
+      </div>
+      <nav className="nav">
+        <div className="nav-section">Operations</div>
+        {NAV_ITEMS.map(renderItem)}
+        <div className="nav-section">Team</div>
+        {NAV_ITEMS_2.map(renderItem)}
+        <div className="nav-section">Organization</div>
+        {NAV_ITEMS_3.map(renderItem)}
+      </nav>
+      <div className="sidebar-foot">
+        <button
+          className="nav-item sidebar-collapse-btn"
+          onClick={onToggleSidebar}
+          title={sidebar === 'compact' ? 'Expand sidebar' : 'Collapse sidebar'}>
+          <Icon name={sidebar === 'compact' ? 'chevronRight' : 'chevronLeft'} size={16} />
+          <span className="label">{sidebar === 'compact' ? 'Expand' : 'Collapse'}</span>
+        </button>
+      </div>
+    </aside>
+  );
+};
+
+const Topbar = ({ page, branch, branches, onChangeBranch, onToggleTheme, theme, user, accent, onChangeAccent, density, onChangeDensity, messages, onNav }) => {
+  const title = {
+    dashboard: 'Dashboard', orders: 'Orders', menu: 'Menu',
+    reservations: 'Reservations', events: 'Events', inventory: 'Inventory',
+    customers: 'Customers', staff: 'Staff', shifts: 'Shifts',
+    attendance: 'Attendance', branches: 'Branches', analytics: 'Analytics',
+    settings: 'Settings',
+  }[page] || 'Dashboard';
+
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const [branchOpen, setBranchOpen] = React.useState(false);
+  const menuRef = React.useRef(null);
+  const branchRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!menuOpen) return;
+    const onDoc = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [menuOpen]);
+
+  React.useEffect(() => {
+    if (!branchOpen) return;
+    const onDoc = (e) => { if (branchRef.current && !branchRef.current.contains(e.target)) setBranchOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [branchOpen]);
+
+  const selected = branch ? branches.find(b => b.id === branch) : null;
+  const branchLabel = selected ? selected.name : 'All branches';
+
+  const THEMES = [
+    { id: 'indigo',      name: 'Indigo',      color: '#4f46e5' },
+    { id: 'deep-ocean',  name: 'Ocean',       color: '#3c5160' },
+    { id: 'luna',        name: 'Luna',        color: '#26658c' },
+    { id: 'forest',      name: 'Forest',      color: '#163832' },
+    { id: 'green',       name: 'Mint',        color: '#059669' },
+    { id: 'porcelain',   name: 'Porcelain',   color: '#c4a69b' },
+    { id: 'black-glaze', name: 'Black Glaze', color: '#233835' },
+    { id: 'neutral',     name: 'Mono',        color: '#0f1115' },
+  ];
+
+  return (
+    <header className="topbar">
+      <div className="crumbs">
+        <span>Blue Elephant Group</span>
+        <Icon name="chevronRight" size={14} />
+        <span className="current">{title}</span>
+      </div>
+      <div className="topbar-search">
+        <Icon name="search" size={15} />
+        <input placeholder="Search staff, orders, menu…" />
+        <span className="kbd">⌘K</span>
+      </div>
+      <div className="topbar-actions">
+        <div className="branch-switch-wrap" ref={branchRef}>
+          <button
+            className={'branch-switch' + (branchOpen ? ' open' : '') + (selected ? ' has-selection' : '')}
+            title="Switch branch"
+            onClick={() => setBranchOpen(o => !o)}>
+            <span className="dot" />
+            <span>{branchLabel}</span>
+            <Icon name={branchOpen ? 'chevronUp' : 'chevronDown'} size={14} />
+          </button>
+          {branchOpen && (
+            <div className="branch-menu" role="menu">
+              <button
+                className={'branch-menu-item all' + (!selected ? ' active' : '')}
+                onClick={() => { onChangeBranch(null); setBranchOpen(false); }}>
+                <span className="branch-menu-check">
+                  {!selected && <Icon name="check" size={13} stroke={3} />}
+                </span>
+                <span className="branch-menu-label">All branches</span>
+                <span className="branch-menu-hint">{branches.length}</span>
+              </button>
+              <div className="branch-menu-sep" />
+              {branches.map(b => (
+                <button
+                  key={b.id}
+                  className={'branch-menu-item' + (selected?.id === b.id ? ' active' : '')}
+                  onClick={() => { onChangeBranch(b.id); setBranchOpen(false); }}>
+                  <span className="branch-menu-check">
+                    {selected?.id === b.id && <Icon name="check" size={13} stroke={3} />}
+                  </span>
+                  <span className="branch-menu-label">
+                    {b.name}
+                    <span className="branch-menu-sub">{b.city}</span>
+                  </span>
+                </button>
+              ))}
+              {selected && (
+                <>
+                  <div className="branch-menu-sep" />
+                  <button
+                    className="branch-menu-item clear"
+                    onClick={() => { onChangeBranch(null); setBranchOpen(false); }}>
+                    <span className="branch-menu-check"><Icon name="x" size={13} stroke={2.4} /></span>
+                    <span className="branch-menu-label">Clear selection</span>
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+        <button className="iconbtn" title="Toggle theme" onClick={onToggleTheme}>
+          <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={17} />
+        </button>
+        <MessagesDropdown messages={messages} />
+        <button className="iconbtn" title="Notifications">
+          <Icon name="bell" size={17} />
+          <span className="dot" />
+        </button>
+        <div className="user-menu-wrap" ref={menuRef}>
+          <button className={'user-chip' + (menuOpen ? ' open' : '')} onClick={() => setMenuOpen(o => !o)}>
+            <Avatar person={user} />
+            <div className="meta">
+              <div className="name">{user.firstName} {user.lastName}</div>
+              <div className="role">Owner</div>
+            </div>
+            <Icon name={menuOpen ? 'chevronUp' : 'chevronDown'} size={14} />
+          </button>
+          {menuOpen && (
+            <div className="user-menu" role="menu">
+              <div className="user-menu-head">
+                <div className="name">{user.firstName} {user.lastName}</div>
+                <div className="email">emma@blueelephant.com</div>
+              </div>
+              <div className="user-menu-section">
+                <div className="user-menu-section-title">
+                  <Icon name="tag" size={13} /> Palette
+                </div>
+                <div className="theme-swatches">
+                  {THEMES.map(t => (
+                    <button
+                      key={t.id}
+                      className={'theme-swatch' + (accent === t.id ? ' active' : '')}
+                      onClick={() => onChangeAccent(t.id)}
+                      title={t.name}>
+                      <span className="circle" style={{ background: t.color }}>
+                        {accent === t.id && <Icon name="check" size={14} stroke={3} />}
+                      </span>
+                      <span className="name">{t.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="user-menu-section">
+                <div className="user-menu-section-title">
+                  <Icon name="sliders" size={13} /> Density
+                </div>
+                <div className="segment density-segment">
+                  {['airy','balanced','dense'].map(v => (
+                    <button
+                      key={v}
+                      className={density === v ? 'active' : ''}
+                      onClick={() => onChangeDensity(v)}>
+                      {v[0].toUpperCase() + v.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="user-menu-items">
+                <button className="user-menu-item" onClick={() => setMenuOpen(false)}>
+                  <Icon name="customers" size={16} />
+                  <span>My Profile</span>
+                </button>
+                <button className="user-menu-item danger" onClick={() => setMenuOpen(false)}>
+                  <Icon name="externalLink" size={16} />
+                  <span>Sign out</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+};
+
+const MessagesDropdown = ({ messages }) => {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef(null);
+  const unreadCount = messages.filter(m => m.unread).length;
+
+  React.useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  return (
+    <div className="msg-wrap" ref={ref}>
+      <button className={'iconbtn msg-trigger' + (open ? ' open' : '')} title="Messages" onClick={() => setOpen(o => !o)}>
+        <Icon name="message" size={17} />
+        {unreadCount > 0 && <span className="msg-badge">{unreadCount}</span>}
+      </button>
+      {open && (
+        <div className="msg-menu" role="menu">
+          <div className="msg-menu-head">
+            <div>
+              <div className="msg-menu-title">Messages</div>
+              <div className="msg-menu-sub">
+                {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}
+              </div>
+            </div>
+            <button className="msg-menu-action">Mark all read</button>
+          </div>
+          <div className="msg-list">
+            {messages.map(m => (
+              <button key={m.id} className={'msg-row' + (m.unread ? ' unread' : '')}>
+                <div className="msg-avatar">
+                  <Avatar person={m.person} />
+                  {m.unread && <span className="msg-unread-dot" />}
+                </div>
+                <div className="msg-body">
+                  <div className="msg-row-head">
+                    <span className="msg-name">{m.person.first} {m.person.last}</span>
+                    <span className="msg-time">{m.time}</span>
+                  </div>
+                  <div className="msg-channel">{m.channel}</div>
+                  <div className="msg-preview">{m.preview}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+          <div className="msg-menu-foot">
+            <button className="msg-menu-foot-btn">
+              <span>Open inbox</span>
+              <Icon name="chevronRight" size={13} />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+Object.assign(window, { Sidebar, Topbar });
+</script>
+<script type="text/babel">// Stub pages for other routes + Dashboard overview
+
+const DashboardPage = ({ data, onToast, onNav }) => {
+  const { STAFF, ORDERS } = data;
+  return (
+    <div className="page">
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Good afternoon, Emma</h1>
+          <div className="page-subtitle">Here's what's happening across Blue Elephant Group today.</div>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn"><Icon name="calendar" size={15} /> Today</button>
+          <button className="btn"><Icon name="download" size={15} /> Export</button>
+        </div>
+      </div>
+
+      <div className="stat-grid">
+        <StatCard label="Revenue today"   value="$12,482" delta="+8.2%"  deltaUp trend={[4,5,6,8,7,9,11,10,12,13,14,15]} icon="analytics" />
+        <StatCard label="Orders"          value="187"     delta="+12"    deltaUp trend={[10,12,14,13,16,17,15,18,20,19,22,24]} icon="orders" />
+        <StatCard label="Avg ticket"      value="$66.75"  delta="−2.1%"  trend={[16,17,15,14,13,15,14,12,13,11,12,12]} icon="tag" />
+        <StatCard label="On shift now"    value="14"      delta="3 branches" trend={[8,9,10,12,14,15,14,13,14,13,14,14]} icon="customers" />
+      </div>
+
+      <div className="dash-grid">
+        <div className="card">
+          <div className="card-head">
+            <div>
+              <div className="card-title">Revenue · last 14 days</div>
+              <div className="card-sub">Combined across all branches</div>
+            </div>
+            <div className="segment">
+              <button>1D</button>
+              <button>1W</button>
+              <button className="active">14D</button>
+              <button>1M</button>
+            </div>
+          </div>
+          <div style={{ height: 220 }}>
+            <RevenueChart />
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-head">
+            <div>
+              <div className="card-title">Branch performance</div>
+              <div className="card-sub">Revenue today</div>
+            </div>
+          </div>
+          {[
+            ['Downtown',  9840, 12000, '#10b981'],
+            ['Mission',   6210, 9000,  '#0ea5e9'],
+            ['Oakland',   4380, 7500,  '#f59e0b'],
+            ['Berkeley',  2920, 6000,  '#8b5cf6'],
+          ].map(([name, val, target, color]) => (
+            <div key={name} style={{ marginBottom: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
+                <span style={{ fontWeight: 500 }}>{name}</span>
+                <span style={{ color: 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
+                  ${val.toLocaleString()} <span style={{ color: 'var(--text-soft)' }}>/ ${target.toLocaleString()}</span>
+                </span>
+              </div>
+              <div style={{ height: 6, background: 'var(--surface-2)', borderRadius: 99, overflow: 'hidden' }}>
+                <div style={{ width: (val / target * 100) + '%', height: '100%', background: color, borderRadius: 99 }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="dash-grid">
+        <div className="card">
+          <div className="card-head">
+            <div>
+              <div className="card-title">Recent orders</div>
+              <div className="card-sub">Last 24 hours</div>
+            </div>
+            <button className="btn sm" onClick={() => onNav('orders')}>
+              View all <Icon name="chevronRight" size={13} />
+            </button>
+          </div>
+          <table className="table" style={{ fontSize: 13 }}>
+            <thead>
+              <tr>
+                <th style={{ background: 'transparent' }}>Order</th>
+                <th style={{ background: 'transparent' }}>Guest</th>
+                <th style={{ background: 'transparent' }}>Items</th>
+                <th style={{ background: 'transparent' }}>Status</th>
+                <th style={{ background: 'transparent', textAlign: 'right' }}>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ORDERS.slice(0, 6).map(o => (
+                <tr key={o.id}>
+                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12.5, color: 'var(--text-muted)' }}>{o.id}</td>
+                  <td>{o.guest}</td>
+                  <td style={{ color: 'var(--text-muted)' }}>{o.items} items</td>
+                  <td><span className={'ostatus ' + o.status}>{o.status}</span></td>
+                  <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>${o.total}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="card">
+          <div className="card-head">
+            <div>
+              <div className="card-title">Team activity</div>
+              <div className="card-sub">Recent clock-ins and changes</div>
+            </div>
+          </div>
+          <div className="activity-list">
+            {STAFF.slice(0, 7).map((u, i) => (
+              <div key={u.id} className="activity-item">
+                <Avatar person={u} />
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div>
+                    <strong>{u.firstName} {u.lastName}</strong>{' '}
+                    <span style={{ color: 'var(--text-muted)' }}>
+                      {['clocked in','updated the menu','closed 4 orders','started a shift','went on break','joined the team','updated availability'][i]}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-soft)' }}>{['Downtown','Mission','Oakland','Berkeley'][i % 4]}</div>
+                </div>
+                <div className="when">{['2m','12m','34m','1h','2h','3h','yesterday'][i]}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const RevenueChart = () => {
+  // Stacked-ish area chart, 14 days
+  const days = 14;
+  const revA = [1800,2100,1950,2400,2800,3100,2600,2200,2500,2900,3300,3600,3100,3900];
+  const revB = [1200,1400,1300,1700,1900,2100,1800,1500,1700,2000,2200,2400,2100,2600];
+  const max = Math.max(...revA.map((v,i) => v + revB[i])) * 1.1;
+  const w = 720, h = 220, pad = 32;
+  const x = (i) => pad + (i / (days - 1)) * (w - pad * 2);
+  const y = (v) => h - pad - (v / max) * (h - pad * 2);
+
+  const areaA = `M${x(0)},${y(revA[0])} ` + revA.map((v, i) => `L${x(i)},${y(v)}`).join(' ') +
+                ` L${x(days - 1)},${h - pad} L${x(0)},${h - pad} Z`;
+  const areaB = `M${x(0)},${y(revA[0] + revB[0])} ` + revA.map((v, i) => `L${x(i)},${y(v + revB[i])}`).join(' ') +
+                ' ' + revA.map((v, i) => `L${x(days - 1 - i)},${y(revA[days - 1 - i])}`).join(' ') + ' Z';
+
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
+      {[0.25, 0.5, 0.75].map(t => (
+        <line key={t} x1={pad} x2={w - pad} y1={pad + t * (h - pad * 2)} y2={pad + t * (h - pad * 2)} stroke="var(--border)" strokeDasharray="2 3" />
+      ))}
+      <path d={areaA} fill="var(--accent-600)" opacity="0.25" />
+      <path d={areaB} fill="var(--accent-600)" opacity="0.12" />
+      <path
+        d={`M${x(0)},${y(revA[0])} ` + revA.map((v, i) => `L${x(i)},${y(v)}`).join(' ')}
+        fill="none" stroke="var(--accent-600)" strokeWidth="2"
+      />
+      {revA.map((v, i) => (
+        <circle key={i} cx={x(i)} cy={y(v)} r={i === days - 1 ? 4 : 0} fill="var(--accent-600)" stroke="var(--surface)" strokeWidth="2" />
+      ))}
+      {[0, Math.floor(days / 2), days - 1].map(i => (
+        <text key={i} x={x(i)} y={h - 10} fontSize="10.5" textAnchor="middle" fill="var(--text-soft)">
+          {['Apr 5', 'Apr 11', 'Apr 18'][[0, Math.floor(days / 2), days - 1].indexOf(i)]}
+        </text>
+      ))}
+    </svg>
+  );
+};
+
+const OrdersPage = ({ data, onToast }) => {
+  const { ORDERS } = data;
+  const [tab, setTab] = React.useState('all');
+  const filtered = tab === 'all' ? ORDERS : ORDERS.filter(o => o.status === tab);
+  const counts = { all: ORDERS.length, ...Object.fromEntries(['new','preparing','served','paid'].map(s => [s, ORDERS.filter(o => o.status === s).length])) };
+
+  return (
+    <div className="page">
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Orders</h1>
+          <div className="page-subtitle">Live orders across all branches.</div>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn"><Icon name="filter" size={15} /> Filters</button>
+          <button className="btn btn-primary"><Icon name="plus" size={15} /> New order</button>
+        </div>
+      </div>
+      <div className="tabs">
+        {['all','new','preparing','served','paid'].map(t => (
+          <button key={t} className={'tab' + (tab === t ? ' active' : '')} onClick={() => setTab(t)}>
+            {t[0].toUpperCase() + t.slice(1)}
+            <span className="pill">{counts[t]}</span>
+          </button>
+        ))}
+      </div>
+      <div className="table-wrap">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Order</th><th>Guest</th><th>Table</th><th>Items</th><th>Status</th><th>Opened</th><th style={{textAlign:'right'}}>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(o => (
+              <tr key={o.id} onClick={() => onToast(`Opened ${o.id}`)}>
+                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12.5, color: 'var(--text-muted)' }}>{o.id}</td>
+                <td>{o.guest}</td>
+                <td><span className="chip">{o.table}</span></td>
+                <td style={{ color: 'var(--text-muted)' }}>{o.items}</td>
+                <td><span className={'ostatus ' + o.status}>{o.status}</span></td>
+                <td style={{ color: 'var(--text-muted)' }}>{o.opened}</td>
+                <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>${o.total}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+const StubPage = ({ title, subtitle, icon }) => (
+  <div className="page">
+    <div className="page-head">
+      <div>
+        <h1 className="page-title">{title}</h1>
+        <div className="page-subtitle">{subtitle}</div>
+      </div>
+    </div>
+    <div className="card" style={{ padding: '60px 30px', textAlign: 'center' }}>
+      <div className="icon-wrap" style={{ width: 56, height: 56, background: 'var(--accent-50)', color: 'var(--accent-700)', margin: '0 auto 12px' }}>
+        <Icon name={icon} size={24} />
+      </div>
+      <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 6 }}>{title} module</div>
+      <div style={{ color: 'var(--text-muted)', maxWidth: 380, margin: '0 auto' }}>
+        This module follows the same layout as Staff — tabs, filters, sortable table, detail panels.
+      </div>
+    </div>
+  </div>
+);
+
+Object.assign(window, { DashboardPage, OrdersPage, StubPage });
+</script>
+<script type="text/babel">// Staff page — primary focus of the redesign
+
+const STATUS_LABEL = { active: 'Active', inactive: 'Inactive', invited: 'Invited' };
+
+const StaffPage = ({ data, onToast }) => {
+  const { STAFF, ROLES, BRANCHES } = data;
+
+  const [query, setQuery]       = React.useState('');
+  const [roleFilter, setRole]   = React.useState('all');
+  const [branchFilter, setBr]   = React.useState('all');
+  const [statusTab, setStatus]  = React.useState('all');
+  const [sort, setSort]         = React.useState({ key: 'name', dir: 'asc' });
+  const [page, setPage]         = React.useState(1);
+  const [perPage]               = React.useState(12);
+  const [selected, setSelected] = React.useState(new Set());
+  const [detailId, setDetailId] = React.useState(null);
+  const [editing, setEditing]   = React.useState(false);
+  const [showInvite, setShowInvite] = React.useState(false);
+  const [staff, setStaff]       = React.useState(STAFF);
+
+  const roleById = Object.fromEntries(ROLES.map(r => [r.id, r]));
+  const branchById = Object.fromEntries(BRANCHES.map(b => [b.id, b]));
+
+  const filtered = React.useMemo(() => {
+    const q = query.trim().toLowerCase();
+    let rows = staff.filter(u => {
+      if (roleFilter !== 'all'   && u.role !== roleFilter)     return false;
+      if (branchFilter !== 'all' && u.branch !== branchFilter) return false;
+      if (statusTab !== 'all'    && u.status !== statusTab)    return false;
+      if (q) {
+        const hay = (u.firstName + ' ' + u.lastName + ' ' + u.email + ' ' + (roleById[u.role]?.name||'')).toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+    const cmp = {
+      name: (a, b) => (a.firstName + a.lastName).localeCompare(b.firstName + b.lastName),
+      email: (a, b) => a.email.localeCompare(b.email),
+      role: (a, b) => (roleById[a.role]?.name||'').localeCompare(roleById[b.role]?.name||''),
+      branch: (a, b) => (branchById[a.branch]?.name||'').localeCompare(branchById[b.branch]?.name||''),
+      status: (a, b) => a.status.localeCompare(b.status),
+      lastActive: (a, b) => new Date(b.lastActive) - new Date(a.lastActive),
+      hours: (a, b) => a.hoursThisWeek - b.hoursThisWeek,
+    }[sort.key] || (() => 0);
+    rows.sort((a, b) => sort.dir === 'asc' ? cmp(a, b) : -cmp(a, b));
+    return rows;
+  }, [staff, query, roleFilter, branchFilter, statusTab, sort]);
+
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const pageRows = filtered.slice((page - 1) * perPage, page * perPage);
+
+  React.useEffect(() => { setPage(1); }, [query, roleFilter, branchFilter, statusTab]);
+
+  const counts = React.useMemo(() => ({
+    all:      staff.length,
+    active:   staff.filter(u => u.status === 'active').length,
+    inactive: staff.filter(u => u.status === 'inactive').length,
+    invited:  staff.filter(u => u.status === 'invited').length,
+  }), [staff]);
+
+  const onShift = Math.round(counts.active * 0.42);
+
+  const allPageSelected = pageRows.length > 0 && pageRows.every(r => selected.has(r.id));
+  const someSelected = pageRows.some(r => selected.has(r.id));
+  const toggleAllPage = () => {
+    const ns = new Set(selected);
+    if (allPageSelected) pageRows.forEach(r => ns.delete(r.id));
+    else pageRows.forEach(r => ns.add(r.id));
+    setSelected(ns);
+  };
+  const toggleOne = (id) => {
+    const ns = new Set(selected);
+    ns.has(id) ? ns.delete(id) : ns.add(id);
+    setSelected(ns);
+  };
+
+  const toggleSort = (key) => {
+    setSort(s => s.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'asc' });
+  };
+
+  const detail = detailId ? staff.find(u => u.id === detailId) : null;
+
+  const handleDelete = (id) => {
+    setStaff(s => s.filter(u => u.id !== id));
+    setSelected(sel => { const ns = new Set(sel); ns.delete(id); return ns; });
+    if (detailId === id) setDetailId(null);
+    onToast('Staff member removed');
+  };
+
+  const bulkDeactivate = () => {
+    setStaff(s => s.map(u => selected.has(u.id) ? { ...u, status: 'inactive' } : u));
+    onToast(`${selected.size} ${selected.size === 1 ? 'member' : 'members'} deactivated`);
+    setSelected(new Set());
+  };
+
+  return (
+    <div className="page">
+      {/* Heading */}
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Staff</h1>
+          <div className="page-subtitle">Manage team members, roles and access across all branches.</div>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn">
+            <Icon name="shield" size={15} />
+            Roles & permissions
+          </button>
+          <button className="btn">
+            <Icon name="download" size={15} />
+            Export
+          </button>
+          <button className="btn btn-primary" onClick={() => setShowInvite(true)}>
+            <Icon name="plus" size={15} stroke={2.2} />
+            Invite staff
+          </button>
+        </div>
+      </div>
+
+      {/* Summary stats */}
+      <div className="stat-grid">
+        <StatCard label="Total staff"    value={counts.all}      delta="+4"  deltaUp trend={[8,10,9,12,13,14,15,16,16,18,19,20]} icon="customers" />
+        <StatCard label="Active"         value={counts.active}   delta="97%" deltaUp trend={[10,12,11,13,14,15,15,16,17,18,19,20]} icon="dot" />
+        <StatCard label="On shift now"   value={onShift}         delta="3 branches" trend={[4,5,3,6,8,9,10,11,9,8,10,11]}  icon="clock" />
+        <StatCard label="Pending invites" value={counts.invited} delta={counts.invited > 0 ? 'Review' : 'None'} trend={[0,1,1,0,2,1,2,3,2,1,2,1]} icon="mail" />
+      </div>
+
+      {/* Tabs */}
+      <div className="tabs">
+        {['all','active','inactive','invited'].map(t => (
+          <button key={t} className={'tab' + (statusTab === t ? ' active' : '')} onClick={() => setStatus(t)}>
+            {t === 'all' ? 'All' : STATUS_LABEL[t]}
+            <span className="pill">{counts[t]}</span>
+          </button>
+        ))}
+        <div style={{ marginLeft: 'auto' }}>
+          <SegmentedView />
+        </div>
+      </div>
+
+      {/* Toolbar */}
+      <div className="toolbar">
+        <div className="left">
+          <label className="field w-search">
+            <Icon name="search" size={15} />
+            <input
+              placeholder="Search by name, email, role…"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+            />
+          </label>
+          <label className="field">
+            <Icon name="tag" size={15} />
+            <select value={roleFilter} onChange={e => setRole(e.target.value)}>
+              <option value="all">All roles</option>
+              {ROLES.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+            </select>
+          </label>
+          <label className="field">
+            <Icon name="branches" size={15} />
+            <select value={branchFilter} onChange={e => setBr(e.target.value)}>
+              <option value="all">All branches</option>
+              {BRANCHES.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+          </label>
+        </div>
+        <div className="right">
+          <button className="btn">
+            <Icon name="filter" size={15} />
+            More filters
+          </button>
+          <div className="segment" title="Sort direction">
+            <button
+              className={sort.dir === 'asc' ? 'active' : ''}
+              onClick={() => setSort(s => ({ ...s, dir: 'asc' }))}>
+              <Icon name="arrowUp" size={13} />
+            </button>
+            <button
+              className={sort.dir === 'desc' ? 'active' : ''}
+              onClick={() => setSort(s => ({ ...s, dir: 'desc' }))}>
+              <Icon name="arrowDown" size={13} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="table-wrap">
+        <table className="table">
+          <thead>
+            <tr>
+              <th className="checkbox-col">
+                <Checkbox
+                  checked={allPageSelected}
+                  indeterminate={someSelected && !allPageSelected}
+                  onChange={toggleAllPage}
+                />
+              </th>
+              <ThSort label="Name"        k="name"       sort={sort} toggle={toggleSort} />
+              <ThSort label="Role"        k="role"       sort={sort} toggle={toggleSort} />
+              <ThSort label="Branch"      k="branch"     sort={sort} toggle={toggleSort} />
+              <ThSort label="Status"      k="status"     sort={sort} toggle={toggleSort} />
+              <ThSort label="Hours / wk"  k="hours"      sort={sort} toggle={toggleSort} align="right" />
+              <ThSort label="Last active" k="lastActive" sort={sort} toggle={toggleSort} />
+              <th className="actions-col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {pageRows.length === 0 && (
+              <tr>
+                <td colSpan={8}>
+                  <div className="empty">
+                    <div className="icon-wrap"><Icon name="search" size={18} /></div>
+                    <div className="title">No results</div>
+                    <div>Try clearing filters or searching a different name.</div>
+                  </div>
+                </td>
+              </tr>
+            )}
+            {pageRows.map(u => (
+              <StaffRow
+                key={u.id}
+                user={u}
+                role={roleById[u.role]}
+                branch={branchById[u.branch]}
+                selected={selected.has(u.id)}
+                onToggle={() => toggleOne(u.id)}
+                onOpen={() => { setDetailId(u.id); setEditing(false); }}
+                onEdit={() => { setDetailId(u.id); setEditing(true); }}
+                onDelete={() => handleDelete(u.id)}
+              />
+            ))}
+          </tbody>
+        </table>
+
+        <div className="pagination">
+          <div>
+            {total === 0
+              ? 'No staff'
+              : <>Showing <strong>{(page - 1) * perPage + 1}</strong>–<strong>{Math.min(page * perPage, total)}</strong> of <strong>{total}</strong></>}
+          </div>
+          <div className="pager">
+            <button className="btn sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
+              <Icon name="chevronLeft" size={14} /> Prev
+            </button>
+            {pageNumbers(page, totalPages).map((p, i) => p === '…'
+              ? <span key={'gap' + i} style={{ color: 'var(--text-soft)', padding: '0 4px' }}>…</span>
+              : <button key={p} className={'page-num' + (p === page ? ' active' : '')} onClick={() => setPage(p)}>{p}</button>
+            )}
+            <button className="btn sm" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>
+              Next <Icon name="chevronRight" size={14} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Bulk action bar */}
+      {selected.size > 0 && (
+        <div className="bulk-bar">
+          <div><strong>{selected.size}</strong> selected</div>
+          <button className="btn sm" onClick={bulkDeactivate}>Deactivate</button>
+          <button className="btn sm">Assign role</button>
+          <button className="btn sm">Change branch</button>
+          <button className="btn sm">Message</button>
+          <button className="close iconbtn" onClick={() => setSelected(new Set())}>
+            <Icon name="x" size={15} />
+          </button>
+        </div>
+      )}
+
+      {/* Detail panel */}
+      <StaffDetailPanel
+        user={detail}
+        role={detail ? roleById[detail.role] : null}
+        branch={detail ? branchById[detail.branch] : null}
+        editing={editing}
+        roles={ROLES}
+        branches={BRANCHES}
+        onClose={() => setDetailId(null)}
+        onEditToggle={() => setEditing(e => !e)}
+        onSave={(patch) => {
+          setStaff(s => s.map(u => u.id === detail.id ? { ...u, ...patch } : u));
+          setEditing(false);
+          onToast('Changes saved');
+        }}
+        onDelete={(id) => handleDelete(id)}
+      />
+
+      {/* Invite drawer */}
+      <InviteDrawer
+        open={showInvite}
+        roles={ROLES}
+        branches={BRANCHES}
+        onClose={() => setShowInvite(false)}
+        onSubmit={(form) => {
+          const id = 'u' + (staff.length + 100);
+          const [first, ...rest] = (form.name || 'New Hire').split(' ');
+          setStaff(s => [{
+            id,
+            firstName: first,
+            lastName: rest.join(' ') || '—',
+            email: form.email,
+            phone: '',
+            role: form.role,
+            branch: form.branch,
+            status: 'invited',
+            startedAt: new Date().toISOString().slice(0,10),
+            lastActive: new Date().toISOString(),
+            payRate: 20,
+            hoursThisWeek: 0,
+          }, ...s]);
+          setShowInvite(false);
+          onToast(`Invite sent to ${form.email}`);
+        }}
+      />
+    </div>
+  );
+};
+
+// --- Helpers --------------------------------------------------------
+
+function pageNumbers(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const out = [1];
+  if (current > 3) out.push('…');
+  for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) out.push(i);
+  if (current < total - 2) out.push('…');
+  out.push(total);
+  return out;
+}
+
+function formatAgo(iso) {
+  const d = new Date(iso), now = new Date();
+  const mins = Math.floor((now - d) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return days + 'd ago';
+  return d.toLocaleDateString();
+}
+
+const ThSort = ({ label, k, sort, toggle, align }) => (
+  <th
+    className={'sortable' + (sort.key === k ? (sort.dir === 'asc' ? ' sorted-asc' : ' sorted-desc') : '')}
+    onClick={() => toggle(k)}
+    style={align === 'right' ? { textAlign: 'right' } : null}
+  >
+    {label}
+    <span className="sort">
+      {sort.key === k
+        ? (sort.dir === 'asc' ? <Icon name="chevronUp" size={12} /> : <Icon name="chevronDown" size={12} />)
+        : <Icon name="chevronsUpDown" size={12} />}
+    </span>
+  </th>
+);
+
+const StatCard = ({ label, value, delta, deltaUp, trend, icon }) => (
+  <div className="stat">
+    <div className="stat-label">
+      <Icon name={icon} size={14} /> {label}
+    </div>
+    <div className="stat-value">
+      {value}
+      {delta && <span className={'stat-delta' + (deltaUp ? ' up' : '')}>{delta}</span>}
+    </div>
+    <div className="stat-trend">
+      <Sparkline values={trend} color="var(--accent-600)" />
+    </div>
+  </div>
+);
+
+const SegmentedView = () => {
+  const [v, setV] = React.useState('list');
+  return (
+    <div className="segment">
+      <button className={v === 'list' ? 'active' : ''} onClick={() => setV('list')}>
+        <Icon name="menu" size={13} /> List
+      </button>
+      <button className={v === 'grid' ? 'active' : ''} onClick={() => setV('grid')}>
+        <Icon name="dashboard" size={13} /> Grid
+      </button>
+    </div>
+  );
+};
+
+const StaffRow = ({ user, role, branch, selected, onToggle, onOpen, onEdit, onDelete }) => {
+  return (
+    <tr
+      className={selected ? 'selected' : ''}
+      onClick={onOpen}
+    >
+      <td className="checkbox-col" onClick={e => e.stopPropagation()}>
+        <Checkbox checked={selected} onChange={onToggle} />
+      </td>
+      <td>
+        <div className="name-cell">
+          <Avatar person={user} />
+          <div className="main">
+            <div className="name">
+              {user.firstName} {user.lastName}
+              {user.isYou && <span className="you-tag">You</span>}
+            </div>
+            <div className="sub">{user.email}</div>
+          </div>
+        </div>
+      </td>
+      <td>
+        <span className="chip">
+          <span className="role-dot" style={{ background: role?.color }} />
+          {role?.name || '—'}
+        </span>
+      </td>
+      <td style={{ color: 'var(--text-muted)' }}>{branch?.name || '—'}</td>
+      <td>
+        <span className={'status ' + user.status}>
+          <span className="status-dot" />
+          {STATUS_LABEL[user.status]}
+        </span>
+      </td>
+      <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--text-muted)' }}>
+        {user.hoursThisWeek}h
+      </td>
+      <td style={{ color: 'var(--text-muted)' }}>{formatAgo(user.lastActive)}</td>
+      <td className="actions-col" onClick={e => e.stopPropagation()}>
+        <div className="row-actions">
+          <button className="iconbtn" title="View" onClick={onOpen}><Icon name="eye" size={15} /></button>
+          <button className="iconbtn" title="Edit" onClick={onEdit}><Icon name="pencil" size={15} /></button>
+          <button className="iconbtn" title="More"><Icon name="more" size={15} /></button>
+        </div>
+      </td>
+    </tr>
+  );
+};
+
+// --- Detail panel ---------------------------------------------------
+
+const StaffDetailPanel = ({ user, role, branch, editing, roles, branches, onClose, onEditToggle, onSave, onDelete }) => {
+  const [form, setForm] = React.useState(null);
+
+  React.useEffect(() => {
+    if (user) setForm({ role: user.role, branch: user.branch, status: user.status, hoursThisWeek: user.hoursThisWeek, payRate: user.payRate });
+  }, [user?.id, editing]);
+
+  return (
+    <>
+      <div className={'panel-overlay' + (user ? ' open' : '')} onClick={onClose} />
+      <aside className={'panel' + (user ? ' open' : '')} aria-hidden={!user}>
+        {user && (
+          <>
+            <div className="panel-head">
+              <Avatar person={user} size="lg" />
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 600, letterSpacing: '-0.01em' }}>
+                  {user.firstName} {user.lastName}
+                </div>
+                <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>
+                  {role?.name} · {branch?.name}
+                </div>
+              </div>
+              <button className="iconbtn panel-close" onClick={onClose}>
+                <Icon name="x" size={17} />
+              </button>
+            </div>
+
+            <div className="panel-body">
+              {!editing ? (
+                <>
+                  <dl className="kv-grid">
+                    <dt>Email</dt>
+                    <dd style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {user.email}
+                      <Icon name="externalLink" size={12} style={{ color: 'var(--text-soft)' }} />
+                    </dd>
+                    <dt>Phone</dt><dd>{user.phone || '—'}</dd>
+                    <dt>Role</dt>
+                    <dd>
+                      <span className="chip">
+                        <span className="role-dot" style={{ background: role?.color }} />
+                        {role?.name}
+                      </span>
+                    </dd>
+                    <dt>Branch</dt><dd>{branch?.name} · {branch?.city}</dd>
+                    <dt>Status</dt>
+                    <dd>
+                      <span className={'status ' + user.status}>
+                        <span className="status-dot" />
+                        {STATUS_LABEL[user.status]}
+                      </span>
+                    </dd>
+                    <dt>Started</dt><dd>{new Date(user.startedAt).toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' })}</dd>
+                    <dt>Pay rate</dt><dd>${user.payRate}/hr</dd>
+                    <dt>Hours this week</dt><dd>{user.hoursThisWeek}h</dd>
+                    <dt>Last active</dt><dd>{formatAgo(user.lastActive)}</dd>
+                  </dl>
+
+                  <div className="panel-section">
+                    <h4>Permissions</h4>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {['View orders','Edit menu','Manage shifts','Close register','Run reports'].map((p, i) => (
+                        <span key={p} className="chip" style={{ background: i < 3 ? 'var(--accent-50)' : 'var(--surface-2)', color: i < 3 ? 'var(--accent-700)' : 'var(--text-muted)' }}>
+                          {i < 3 && <Icon name="check" size={11} stroke={2.4} />}
+                          {p}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="panel-section">
+                    <h4>Recent activity</h4>
+                    <div className="timeline">
+                      {[
+                        ['Clocked in',        'Today, 9:02 AM'],
+                        ['Updated menu item', 'Yesterday, 4:18 PM'],
+                        ['Closed 12 orders',  '2 days ago'],
+                        ['Changed password',  'Last week'],
+                      ].map(([what, when]) => (
+                        <div key={what} className="timeline-item">
+                          <div className="timeline-dot" />
+                          <div>
+                            <div>{what}</div>
+                            <div className="when">{when}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                form && (
+                  <>
+                    <div className="panel-section" style={{ marginTop: 0 }}>
+                      <h4>Role</h4>
+                      <label className="field" style={{ width: '100%' }}>
+                        <Icon name="tag" size={15} />
+                        <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}>
+                          {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                        </select>
+                      </label>
+                    </div>
+                    <div className="panel-section">
+                      <h4>Branch</h4>
+                      <label className="field" style={{ width: '100%' }}>
+                        <Icon name="branches" size={15} />
+                        <select value={form.branch} onChange={e => setForm({ ...form, branch: e.target.value })}>
+                          {branches.map(b => <option key={b.id} value={b.id}>{b.name} · {b.city}</option>)}
+                        </select>
+                      </label>
+                    </div>
+                    <div className="panel-section">
+                      <h4>Status</h4>
+                      <div className="segment" style={{ width: '100%' }}>
+                        {['active','inactive','invited'].map(s => (
+                          <button
+                            key={s}
+                            className={form.status === s ? 'active' : ''}
+                            onClick={() => setForm({ ...form, status: s })}
+                            style={{ flex: 1, justifyContent: 'center' }}>
+                            {STATUS_LABEL[s]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="panel-section">
+                      <h4>Compensation</h4>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                        <label className="field">
+                          <span style={{color:'var(--text-soft)'}}>$</span>
+                          <input type="number" value={form.payRate} onChange={e => setForm({ ...form, payRate: +e.target.value })} />
+                          <span style={{color:'var(--text-soft)', fontSize: 12}}>/hr</span>
+                        </label>
+                        <label className="field">
+                          <Icon name="clock" size={15} />
+                          <input type="number" value={form.hoursThisWeek} onChange={e => setForm({ ...form, hoursThisWeek: +e.target.value })} />
+                          <span style={{color:'var(--text-soft)', fontSize: 12}}>hrs/wk</span>
+                        </label>
+                      </div>
+                    </div>
+                  </>
+                )
+              )}
+            </div>
+
+            <div className="panel-foot">
+              {editing ? (
+                <>
+                  <button className="btn" onClick={onEditToggle}>Cancel</button>
+                  <button className="btn btn-primary" onClick={() => onSave(form)}>Save changes</button>
+                </>
+              ) : (
+                <>
+                  <button className="btn btn-danger-ghost" onClick={() => onDelete(user.id)}>
+                    <Icon name="trash" size={14} /> Remove
+                  </button>
+                  <div style={{ flex: 1 }} />
+                  <button className="btn">
+                    <Icon name="mail" size={14} /> Message
+                  </button>
+                  <button className="btn btn-primary" onClick={onEditToggle}>
+                    <Icon name="pencil" size={14} /> Edit
+                  </button>
+                </>
+              )}
+            </div>
+          </>
+        )}
+      </aside>
+    </>
+  );
+};
+
+// --- Invite drawer --------------------------------------------------
+
+const InviteDrawer = ({ open, roles, branches, onClose, onSubmit }) => {
+  const [form, setForm] = React.useState({ name: '', email: '', role: 'server', branch: 'downtown' });
+  React.useEffect(() => { if (open) setForm({ name: '', email: '', role: 'server', branch: 'downtown' }); }, [open]);
+
+  return (
+    <>
+      <div className={'panel-overlay' + (open ? ' open' : '')} onClick={onClose} />
+      <aside className={'panel' + (open ? ' open' : '')} aria-hidden={!open}>
+        <div className="panel-head">
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 600, letterSpacing: '-0.01em' }}>Invite staff</div>
+            <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>Send an email invite to join your team.</div>
+          </div>
+          <button className="iconbtn panel-close" onClick={onClose}><Icon name="x" size={17} /></button>
+        </div>
+        <div className="panel-body">
+          <div className="panel-section" style={{ marginTop: 0 }}>
+            <h4>Name</h4>
+            <label className="field" style={{ width: '100%' }}>
+              <Icon name="customers" size={15} />
+              <input placeholder="Full name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+            </label>
+          </div>
+          <div className="panel-section">
+            <h4>Email</h4>
+            <label className="field" style={{ width: '100%' }}>
+              <Icon name="mail" size={15} />
+              <input placeholder="name@company.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+            </label>
+          </div>
+          <div className="panel-section">
+            <h4>Role</h4>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap: 6 }}>
+              {roles.map(r => (
+                <button
+                  key={r.id}
+                  className="btn"
+                  onClick={() => setForm({ ...form, role: r.id })}
+                  style={{
+                    justifyContent: 'flex-start',
+                    borderColor: form.role === r.id ? 'var(--accent-500)' : 'var(--border)',
+                    boxShadow: form.role === r.id ? '0 0 0 3px var(--accent-100)' : 'none',
+                  }}>
+                  <span className="role-dot" style={{ background: r.color, width: 8, height: 8, borderRadius: 99 }} />
+                  {r.name}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="panel-section">
+            <h4>Branch</h4>
+            <label className="field" style={{ width: '100%' }}>
+              <Icon name="branches" size={15} />
+              <select value={form.branch} onChange={e => setForm({ ...form, branch: e.target.value })}>
+                {branches.map(b => <option key={b.id} value={b.id}>{b.name} · {b.city}</option>)}
+              </select>
+            </label>
+          </div>
+        </div>
+        <div className="panel-foot">
+          <button className="btn" onClick={onClose}>Cancel</button>
+          <button
+            className="btn btn-primary"
+            disabled={!form.email}
+            onClick={() => onSubmit(form)}>
+            <Icon name="userAdd" size={14} /> Send invite
+          </button>
+        </div>
+      </aside>
+    </>
+  );
+};
+
+Object.assign(window, { StaffPage });
+</script>
+<script type="text/babel">// Main app shell — composes pages and wires shared state
+
+const { useState, useEffect } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "density": "balanced",
+  "sidebar": "full",
+  "accent": "green",
+  "theme": "light"
+}/*EDITMODE-END*/;
+
+function App() {
+  const [page, setPage]         = useState(() => localStorage.getItem('cl_page') || 'staff');
+  const [branch, setBranch]     = useState(() => localStorage.getItem('cl_branch') || null);
+  const [tweaksOpen, setTweaksOpen] = useState(false);
+  const [tweaks, setTweaks]     = useState(() => {
+    try { return { ...TWEAK_DEFAULTS, ...(JSON.parse(localStorage.getItem('cl_tweaks') || '{}')) }; }
+    catch { return { ...TWEAK_DEFAULTS }; }
+  });
+  const [toast, setToast]       = useState(null);
+  const [editModeHost, setEditHost] = useState(false);
+
+  // apply tweaks → root attributes
+  useEffect(() => {
+    const r = document.documentElement;
+    r.dataset.density = tweaks.density;
+    r.dataset.sidebar = tweaks.sidebar;
+    r.dataset.accent  = tweaks.accent;
+    r.dataset.theme   = tweaks.theme;
+    localStorage.setItem('cl_tweaks', JSON.stringify(tweaks));
+  }, [tweaks]);
+
+  useEffect(() => { localStorage.setItem('cl_page', page); }, [page]);
+  useEffect(() => {
+    if (branch) localStorage.setItem('cl_branch', branch);
+    else localStorage.removeItem('cl_branch');
+  }, [branch]);
+
+  const showToast = (msg) => {
+    setToast(msg);
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => setToast(null), 2200);
+  };
+
+  const updateTweak = (k, v) => {
+    setTweaks(t => {
+      const next = { ...t, [k]: v };
+      if (editModeHost) {
+        window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [k]: v } }, '*');
+      }
+      return next;
+    });
+  };
+
+  // Edit-mode host integration
+  useEffect(() => {
+    const onMsg = (e) => {
+      const d = e.data;
+      if (!d || typeof d !== 'object') return;
+      if (d.type === '__activate_edit_mode')   { setEditHost(true); setTweaksOpen(true); }
+      if (d.type === '__deactivate_edit_mode') { setEditHost(false); setTweaksOpen(false); }
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  const user = { firstName: 'Emma', lastName: 'Chen' };
+  const data = window.CL_DATA;
+
+  let pageEl;
+  switch (page) {
+    case 'dashboard':    pageEl = <DashboardPage data={data} onToast={showToast} onNav={setPage} />; break;
+    case 'staff':        pageEl = <StaffPage     data={data} onToast={showToast} />; break;
+    case 'orders':       pageEl = <OrdersPage    data={data} onToast={showToast} />; break;
+    case 'menu':         pageEl = <StubPage title="Menu"         subtitle="Items, categories, modifiers and pricing." icon="menu" />; break;
+    case 'reservations': pageEl = <StubPage title="Reservations" subtitle="Upcoming bookings and waitlist management." icon="reservations" />; break;
+    case 'events':       pageEl = <StubPage title="Events"       subtitle="Private events, catering and special nights." icon="events" />; break;
+    case 'inventory':    pageEl = <StubPage title="Inventory"    subtitle="Stock, purchase orders and suppliers." icon="inventory" />; break;
+    case 'customers':    pageEl = <StubPage title="Customers"    subtitle="Guest profiles, loyalty and marketing." icon="customers" />; break;
+    case 'shifts':       pageEl = <StubPage title="Shifts"       subtitle="Schedule, swaps and time-off." icon="shifts" />; break;
+    case 'attendance':   pageEl = <StubPage title="Attendance"   subtitle="Clock-ins, timesheets and approvals." icon="attendance" />; break;
+    case 'branches':     pageEl = <StubPage title="Branches"     subtitle="Locations, hours and configuration." icon="branches" />; break;
+    case 'analytics':    pageEl = <StubPage title="Analytics"    subtitle="Revenue, trends and custom reports." icon="analytics" />; break;
+    case 'settings':     pageEl = <StubPage title="Settings"     subtitle="Organization, billing and integrations." icon="settings" />; break;
+    default:             pageEl = <DashboardPage data={data} onToast={showToast} onNav={setPage} />;
+  }
+
+  return (
+    <div className="app">
+      <Sidebar
+        page={page}
+        onNav={setPage}
+        sidebar={tweaks.sidebar}
+        onToggleSidebar={() => updateTweak('sidebar', tweaks.sidebar === 'compact' ? 'full' : 'compact')}
+      />
+      <div className="main">
+        <Topbar
+          page={page}
+          branch={branch}
+          branches={data.BRANCHES}
+          onChangeBranch={setBranch}
+          user={user}
+          theme={tweaks.theme}
+          accent={tweaks.accent}
+          density={tweaks.density}
+          onChangeAccent={(v) => updateTweak('accent', v)}
+          onChangeDensity={(v) => updateTweak('density', v)}
+          messages={data.MESSAGES}
+          onNav={setPage}
+          onToggleTheme={() => updateTweak('theme', tweaks.theme === 'dark' ? 'light' : 'dark')}
+        />
+        {pageEl}
+      </div>
+
+      <div className={'toast' + (toast ? ' show' : '')}>{toast}</div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body></html>
