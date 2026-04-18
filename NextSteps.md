@@ -51,10 +51,10 @@ Gaps identified by comparing all `docs/modules/` specs against the implementatio
 
 ### Orders
 - [x] ~~**Stripe PaymentIntent creation + webhook handler**~~ *(done)*
-- [ ] Pre-paid online orders auto-confirmation after successful PaymentIntent
-- [ ] Delivery platform 5-min auto-confirmation SLA job
+- [x] ~~**Pre-paid online orders auto-confirmation after successful PaymentIntent**~~ *(done)*
+- [x] ~~**Delivery platform 5-min auto-confirmation SLA job**~~ *(done)*
 - [ ] `SyncOrderToPlatformsJob` stub → real Uber Eats / DoorDash API calls *(Phase 3)*
-- [ ] Stock restoration on pre-preparation cancellations
+- [x] ~~**Stock restoration on pre-preparation cancellations**~~ *(done)*
 
 ### Menu
 - [ ] Sub-categories (Category → Sub-category → Item — only 1 level of categories currently)
