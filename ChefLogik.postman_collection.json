@@ -941,6 +941,229 @@
       ]
     },
     {
+      "name": "Profile (Self-Service)",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staff_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "profile"
+              ]
+            },
+            "description": "Returns the authenticated staff member's own profile including name, email, phone, photo_url, and personal settings (theme, notifications)."
+          }
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staff_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Cook\",\n  \"phone\": \"+447911123456\",\n  \"settings\": {\n    \"theme\": \"ocean\",\n    \"notifications\": {\n      \"email\": true,\n      \"sms\": false\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "profile"
+              ]
+            },
+            "description": "Update own profile. All fields optional. theme: ocean | forest | orange."
+          }
+        },
+        {
+          "name": "Upload My Profile Photo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staff_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "photo",
+                  "value": "select a file",
+                  "type": "file"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/profile/photo",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "profile",
+                "photo"
+              ]
+            },
+            "description": "Upload own profile photo to S3. Accepts: jpg, jpeg, png, gif, webp. Max 2 MB. Returns updated profile with new photo_url."
+          }
+        },
+        {
+          "name": "Change My Password",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staff_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"OldSecret123!\",\n  \"password\": \"NewSecret456!\",\n  \"password_confirmation\": \"NewSecret456!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/profile/password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "profile",
+                "password"
+              ]
+            },
+            "description": "Change own password. Requires current_password for verification. password must be min 8 chars and must match password_confirmation."
+          }
+        },
+        {
+          "name": "Update Another Staff Member's Profile (Manager)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staff_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"phone\": \"+447911000000\",\n  \"settings\": {\n    \"theme\": \"forest\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/staff/{{staff_id}}/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "staff",
+                "{{staff_id}}",
+                "profile"
+              ]
+            },
+            "description": "Manager updates another staff member's profile. Requires staff.manage permission. Same fields as PATCH /profile."
+          }
+        },
+        {
+          "name": "Upload Photo for Another Staff Member (Manager)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staff_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "photo",
+                  "value": "select a file",
+                  "type": "file"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/staff/{{staff_id}}/photo",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "staff",
+                "{{staff_id}}",
+                "photo"
+              ]
+            },
+            "description": "Manager uploads a profile photo for another staff member. Requires staff.manage permission. Accepts: jpg, jpeg, png, gif, webp. Max 2 MB."
+          }
+        }
+      ]
+    },
+    {
       "name": "Customer Auth",
       "item": [
         {
@@ -2300,6 +2523,44 @@
                 "{{shift_id}}"
               ]
             }
+          }
+        },
+        {
+          "name": "Bulk Publish Draft Shifts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staff_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branch_id\": \"{{branch_id}}\",\n  \"date_from\": \"2026-04-28\",\n  \"date_to\": \"2026-05-04\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/staff/shifts/publish",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "staff",
+                "shifts",
+                "publish"
+              ]
+            },
+            "description": "Bulk-publish all draft shifts for a branch within a date range. Returns { data: { published_count: N } }. Requires shifts.manage permission."
           }
         }
       ]
@@ -5390,6 +5651,36 @@
             },
             "description": "Requires customers.gdpr permission. Sets status=deletion_pending and stops all comms immediately."
           }
+        },
+        {
+          "name": "Get Customer Branch Visits",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staff_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/customers/{{customer_tenant_profile_id}}/branch-visits",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers",
+                "{{customer_tenant_profile_id}}",
+                "branch-visits"
+              ]
+            },
+            "description": "Returns aggregate visit counts, last visit date, and total spend per branch for this customer. Requires customers.view_full permission."
+          }
         }
       ]
     },
@@ -8023,6 +8314,306 @@
       ]
     },
     {
+      "name": "Settings",
+      "item": [
+        {
+          "name": "Get Resolved Settings (cascade)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staff_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "settings"
+              ],
+              "query": [
+                {
+                  "key": "branch_id",
+                  "value": "{{branch_id}}",
+                  "description": "Optional \u2014 include to get branch-level cascade"
+                }
+              ]
+            },
+            "description": "Returns all settings resolved via cascade: branch \u2192 tenant \u2192 platform \u2192 config default. Pass ?branch_id= to include branch overrides. Requires settings.view."
+          }
+        },
+        {
+          "name": "Get Settings Catalogue",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staff_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/settings/catalogue",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "settings",
+                "catalogue"
+              ]
+            },
+            "description": "Returns full settings catalogue grouped by module. Each key includes: label, type, scopes, options, min, max, current value, can_edit flag (based on actor's permissions). Requires settings.view."
+          }
+        },
+        {
+          "name": "Get Tenant Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staff_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/settings/tenant",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "settings",
+                "tenant"
+              ]
+            },
+            "description": "Returns tenant-level setting overrides only (no cascade). Keys with no override return their config default. Requires settings.view."
+          }
+        },
+        {
+          "name": "Update Tenant Settings",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staff_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"settings\": {\n    \"loyalty.earn_rate\": 1.5,\n    \"loyalty.min_redeem_points\": 200,\n    \"reservations.default_duration\": 90,\n    \"reservations.slot_interval\": 30,\n    \"reservations.max_party_size\": 20,\n    \"reservations.advance_booking_days\": 90,\n    \"orders.service_charge_pct\": 10.0,\n    \"orders.auto_accept_online\": false,\n    \"kds.warning_threshold_minutes\": 5,\n    \"kds.critical_threshold_minutes\": 10,\n    \"notifications.reservation_reminder_24h\": true,\n    \"notifications.reservation_reminder_2h\": true,\n    \"notifications.order_confirmation_sms\": false,\n    \"notifications.order_confirmation_email\": true,\n    \"notifications.low_stock_alerts\": true,\n    \"notifications.low_stock_email\": false,\n    \"staff.attendance_grace_period_minutes\": 5,\n    \"ui.date_format\": \"DD/MM/YYYY\",\n    \"ui.time_format\": \"24h\",\n    \"ui.items_per_page\": 25\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/settings/tenant",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "settings",
+                "tenant"
+              ]
+            },
+            "description": "Update one or more tenant-level settings. Each key is validated against type, min, max, and allowed options. Actor must have the permission required by each key (checked per key \u2014 partial updates allowed). Returns 403 per-key if permission missing."
+          }
+        },
+        {
+          "name": "Get Branch Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staff_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/settings/branch/{{branch_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "settings",
+                "branch",
+                "{{branch_id}}"
+              ]
+            },
+            "description": "Returns branch-level setting overrides only (no cascade). Only branch-scoped keys are returned. Keys with no override return their config default. Requires settings.view."
+          }
+        },
+        {
+          "name": "Update Branch Settings",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staff_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"settings\": {\n    \"reservations.default_duration\": 120,\n    \"reservations.slot_interval\": 15,\n    \"reservations.max_party_size\": 12,\n    \"orders.service_charge_pct\": 12.5,\n    \"orders.auto_accept_online\": true,\n    \"kds.warning_threshold_minutes\": 7,\n    \"kds.critical_threshold_minutes\": 15,\n    \"notifications.reservation_reminder_24h\": true,\n    \"notifications.reservation_reminder_2h\": false,\n    \"staff.attendance_grace_period_minutes\": 10,\n    \"ui.date_format\": \"DD/MM/YYYY\",\n    \"ui.time_format\": \"24h\",\n    \"ui.items_per_page\": 50\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/settings/branch/{{branch_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "settings",
+                "branch",
+                "{{branch_id}}"
+              ]
+            },
+            "description": "Update one or more branch-level settings. Only branch-scoped keys are accepted. Actor must hold the permission required by each key."
+          }
+        },
+        {
+          "name": "List Setting Delegations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staff_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/settings/delegates",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "settings",
+                "delegates"
+              ]
+            },
+            "description": "List all setting delegations for this tenant \u2014 which setting keys have been delegated to which role slugs, and by whom. Requires settings.delegate permission."
+          }
+        },
+        {
+          "name": "Add Setting Delegation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staff_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"loyalty.earn_rate\",\n  \"role_slug\": \"branch_manager\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/settings/delegates",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "settings",
+                "delegates"
+              ]
+            },
+            "description": "Delegate a setting key to a role slug. The grantor must hold settings.delegate AND be able to edit the key themselves. Idempotent \u2014 calling again with the same key+role is a no-op."
+          }
+        },
+        {
+          "name": "Revoke Setting Delegation",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staff_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/settings/delegates/loyalty.earn_rate/branch_manager",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "settings",
+                "delegates",
+                "loyalty.earn_rate",
+                "branch_manager"
+              ]
+            },
+            "description": "Revoke a previously granted delegation. Requires settings.delegate. Replace 'loyalty.earn_rate' and 'branch_manager' in the URL with the actual key and role slug."
+          }
+        }
+      ]
+    },
+    {
       "name": "Analytics \u2014 Dashboards",
       "item": [
         {
@@ -8214,6 +8805,75 @@
                 "{{plan_id}}"
               ]
             }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Platform \u2014 Settings",
+      "item": [
+        {
+          "name": "Get Platform Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{platform_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/platform/settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "platform",
+                "settings"
+              ]
+            },
+            "description": "Returns all platform-scope settings with current values, labels, types, defaults, and allowed options. Requires platform admin auth."
+          }
+        },
+        {
+          "name": "Update Platform Settings",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{platform_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"settings\": {\n    \"platform.maintenance_mode\": false,\n    \"platform.new_signups_enabled\": true,\n    \"platform.default_plan\": \"starter\",\n    \"platform.max_api_requests_per_min\": 1000\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/platform/settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "platform",
+                "settings"
+              ]
+            },
+            "description": "Update one or more platform-scope settings. Only platform-scope keys accepted. Requires platform admin auth. Options \u2014 default_plan: starter | growth | enterprise."
           }
         }
       ]
