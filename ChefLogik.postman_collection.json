@@ -3653,6 +3653,97 @@
             },
             "description": "**Valid reason_codes:** customer_request | out_of_stock | kitchen_error | payment_failed | delivery_failure | restaurant_closed | other"
           }
+        },
+        {
+          "name": "Create Payment Intent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staff_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "Required \u2014 unique UUID per payment attempt"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currency\": \"GBP\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/{{order_id}}/payment",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "{{order_id}}",
+                "payment"
+              ]
+            },
+            "description": "Creates a Stripe PaymentIntent for the order total. Returns client_secret for use with Stripe.js. Requires Idempotency-Key header to prevent duplicate charges on retry. Blocked by platform.stripe_enabled setting."
+          }
+        },
+        {
+          "name": "Refund Order Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staff_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount_cents\": 1000,\n  \"reason\": \"Customer request\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/{{order_id}}/refund",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "{{order_id}}",
+                "refund"
+              ]
+            },
+            "description": "Initiates a refund via the centralised RefundEngine. Omit amount_cents for a full refund. Requires orders.refund permission."
+          }
         }
       ]
     },
@@ -6736,6 +6827,54 @@
               ]
             }
           }
+        },
+        {
+          "name": "Create Event Deposit PaymentIntent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staff_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "Required \u2014 unique UUID per payment attempt"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount_cents\": 25000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/events/{{event_id}}/payment",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "events",
+                "{{event_id}}",
+                "payment"
+              ]
+            },
+            "description": "Creates a Stripe PaymentIntent for the event deposit. Only valid on proposal or confirmed events. Returns client_secret for Stripe.js. Requires events.manage permission."
+          }
         }
       ]
     },
@@ -8805,6 +8944,49 @@
                 "{{plan_id}}"
               ]
             }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "name": "Stripe Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Stripe-Signature",
+                "value": "t=...,v1=...",
+                "description": "Stripe-generated HMAC signature \u2014 verified against STRIPE_WEBHOOK_SECRET"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"evt_test_001\",\n  \"type\": \"payment_intent.succeeded\",\n  \"data\": {\n    \"object\": {\n      \"id\": \"pi_test_abc123\",\n      \"amount\": 10000,\n      \"currency\": \"gbp\",\n      \"status\": \"succeeded\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/stripe",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "webhooks",
+                "stripe"
+              ]
+            },
+            "description": "Stripe webhook endpoint. No auth required \u2014 verified via Stripe-Signature header. Dispatches to critical queue and returns 200 within 5 seconds. Handled events: payment_intent.succeeded, payment_intent.payment_failed, charge.refunded."
           }
         }
       ]

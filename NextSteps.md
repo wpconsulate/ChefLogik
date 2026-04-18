@@ -1,7 +1,7 @@
 # ChefLogik — Next Steps
 
 ## Current State
-- **Backend:** 349 tests passing
+- **Backend:** 371 tests passing (349 + 22 new Stripe tests)
 - **Frontend:** All 12 modules complete (React 19 + TypeScript + MST)
 - **Phase 1 Foundation:** ✓ Complete
 - **Phase 2 Core Modules:** ✓ Complete
@@ -9,18 +9,22 @@
 
 ---
 
-## Up Next — External Integrations
+## External Integrations Progress
 
-All provider decisions are locked. Implementation order:
-
-### 1. Stripe Payments ← START HERE
-- `PaymentGatewayInterface` contract + `StripePaymentGateway` implementation
+### ✓ 1. Stripe Payments — COMPLETE
+- `PaymentGatewayInterface` contract + `StripePaymentGateway` implementation (`stripe/stripe-php ^20`)
 - `config/payment.php` driver config
-- Order payment flow: PaymentIntent creation, `PaymentIntent.succeeded` webhook, signature verification, idempotency
-- Events deposit collection (stub exists in `EventService`)
-- Refund engine already wired — needs real Stripe Refunds API call
+- `PaymentService` — creates PaymentIntents, collects event deposits, delegates refunds
+- `POST /api/v1/orders/{id}/payment` — creates PaymentIntent, returns `client_secret`
+- `POST /api/v1/orders/{id}/refund` — partial or full refund via `RefundEngine`
+- `POST /api/v1/events/{id}/payment` — event deposit PaymentIntent (was stub)
+- `POST /api/webhooks/stripe` — signature verification + dispatches `ProcessStripeWebhookJob` to `critical` queue
+- `ProcessStripeWebhookJob` handles: `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded`
+- RefundEngine: real Stripe Refunds API call with fallback-to-manual-record on gateway failure
+- Platform admin toggle: `platform.stripe_enabled` (PATCH /api/platform/settings) → returns 503 when disabled
+- 22 tests covering all flows
 
-### 2. SMS — Twilio
+### 2. SMS — Twilio ← START HERE
 - `SmsProviderInterface` contract + `TwilioSmsProvider` implementation
 - `config/sms.php` driver config
 - Wire stubs: reservation reminders (24h + 2h jobs exist), customer OTP password reset, loyalty campaign dispatch
@@ -46,7 +50,7 @@ All provider decisions are locked. Implementation order:
 Gaps identified by comparing all `docs/modules/` specs against the implementation.
 
 ### Orders
-- [ ] **Stripe PaymentIntent creation + webhook handler** *(unblocked — Decision 7 confirmed)*
+- [x] ~~**Stripe PaymentIntent creation + webhook handler**~~ *(done)*
 - [ ] Pre-paid online orders auto-confirmation after successful PaymentIntent
 - [ ] Delivery platform 5-min auto-confirmation SLA job
 - [ ] `SyncOrderToPlatformsJob` stub → real Uber Eats / DoorDash API calls *(Phase 3)*
@@ -64,7 +68,7 @@ Gaps identified by comparing all `docs/modules/` specs against the implementatio
 - [ ] Loyalty member no-show forgiveness (configurable per tier)
 
 ### Events
-- [ ] **Stripe deposit collection** — PaymentIntent for event deposits *(unblocked — Decision 7 confirmed)*
+- [x] ~~**Stripe deposit collection**~~ *(done)*
 - [ ] Non-refundable booking fee policy per occasion type
 - [ ] Credit limit enforcement — block new bookings for over-limit net-30 corporate accounts
 - [ ] Run sheet PDF export
