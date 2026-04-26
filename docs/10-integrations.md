@@ -8,9 +8,9 @@ Every external API key is stored PER TENANT in an encrypted `tenant_integrations
 CREATE TABLE tenant_integrations (
   id UUID PRIMARY KEY,
   tenant_id UUID NOT NULL FK → tenants,
-  integration_type VARCHAR(50) NOT NULL,  -- 'uber_eats', 'doordash', 'stripe_terminal', 'twilio'
-  credentials JSONB NOT NULL,             -- encrypted at rest
-  settings JSONB DEFAULT '{}',
+  integration_type VARCHAR(50) NOT NULL,  -- 'uber_eats', 'wolt', 'stripe_terminal', 'twilio'
+  credentials TEXT NOT NULL,              -- encrypted at rest via Laravel encrypt:array cast
+  settings JSONB DEFAULT '{}',            -- plaintext; includes branch_id + store_id/venue_id for webhook lookup
   is_active BOOLEAN DEFAULT true,
   last_synced_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ
@@ -105,23 +105,62 @@ class UberEatsWebhookController
 
 ---
 
-## 2. DoorDash Integration
+## 2. Wolt Integration
 
 Same architecture as Uber Eats. Key differences:
 
-**Authentication:** DoorDash uses JWT (DoorDash signs with their private key, we verify with their public key — not OAuth).
+**Authentication:** Wolt uses OAuth 2.0 client credentials (same as Uber Eats).
 
 ```php
-public function verifyDoorDashJWT(string $token): array
+class WoltService
 {
-    $publicKey = config('services.doordash.public_key');
-    return JWT::decode($token, new Key($publicKey, 'RS256'));
+    // Token refresh — called by scheduled job every 55 minutes
+    public function refreshToken(): string
+    {
+        $response = Http::post('https://authentication.wolt.com/v1/wauth2/access_token', [
+            'client_id'     => $this->clientId,
+            'client_secret' => $this->clientSecret,
+            'grant_type'    => 'client_credentials',
+        ]);
+
+        $token = $response->json('access_token');
+        cache()->put("wolt_token:{$this->venueId}", $token, now()->addMinutes(55));
+        return $token;
+    }
+
+    // 86 sync — called by SyncEightySixToPlatformsJob on 'high' queue
+    public function setItemAvailability(string $woltItemId, bool $available): void
+    {
+        retry(3, function() use ($woltItemId, $available) {
+            Http::withToken($this->getToken())
+                ->patch("https://restaurant-api.wolt.com/v1/venues/{$this->venueId}/items/{$woltItemId}", [
+                    'enabled' => $available,
+                ]);
+        }, backoff: [5000, 30000, 120000]);
+    }
+
+    // Pause/resume venue
+    public function pauseStore(): void { ... }
+    public function resumeStore(): void { ... }
 }
 ```
 
-**Webhook payload:** Different schema from Uber Eats. The normalisation layer in `DoorDashOrderNormaliser` converts it to the same internal order DTO before any business logic runs.
+**Webhook validation:**
+```php
+// Verify Wolt webhook signature
+public function verifyWebhook(Request $request): bool
+{
+    $signature = $request->header('X-Wolt-Signature-256');
+    $expected  = 'sha256=' . hash_hmac('sha256', $request->getContent(), $this->webhookSecret);
+    return hash_equals($expected, $signature);
+}
+```
 
-**Commission:** DoorDash commission rate stored in `tenant_integrations.settings.commission_rate`. Applied to all DoorDash orders in net revenue calculation.
+**Webhook payload:** Different schema from Uber Eats. The normalisation layer in `ProcessWoltOrderJob` converts it to the same internal order DTO before any business logic runs.
+
+**Commission:** Wolt commission rate stored in `tenant_integrations.settings.commission_rate`. Applied to all Wolt orders in net revenue calculation.
+
+**Rate limits:** Menu API: 60 req/min. Store Status: 10 req/min. Same retry pattern as Uber Eats.
 
 ---
 

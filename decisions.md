@@ -234,3 +234,16 @@ Both credentials documented in `.env.example`.
 ## Additional Decisions
 
 _Record any architectural decisions made during development here. Date every entry._
+
+---
+
+## Decision 22 — Delivery Platform Integrations
+
+**Date decided:** 2026-04-19
+**Decision:** Uber Eats and Wolt only. DoorDash is not integrated.
+**Rationale:** Market fit — DoorDash has minimal presence in the target markets. Wolt replaces DoorDash in scope.
+**Implications:**
+- `DeliveryPlatform` enum has two cases: `UberEats` and `Wolt`
+- `menu_item_platform_mappings.platform` column only accepts `'uber_eats'` and `'wolt'`
+- All references to DoorDash in stubs, jobs, and docs are replaced with Wolt
+- `SyncMenuItemToPlatformsJob` and `SyncOrderToPlatformsJob` target Uber Eats + Wolt

@@ -13,8 +13,8 @@ if (!$integration) {
     return;
 }
 
-$credentials = decrypt($integration->credentials);
-// credentials = { client_id, client_secret, store_id, webhook_secret }
+// credentials (encrypted:array cast) = { client_id, client_secret, store_id/venue_id, webhook_secret }
+// settings (plain jsonb) = { branch_id, store_id/venue_id } — queryable, used for webhook routing
 ```
 
 ## Stripe Webhook — The Full Pattern
@@ -50,7 +50,7 @@ public function handleStripe(Request $request): JsonResponse
 
     return response()->json(['status' => 'accepted']);
 }
-// Same pattern for Uber Eats and DoorDash webhooks
+// Same pattern for Uber Eats and Wolt webhooks
 ```
 
 ## Retry Pattern for External API Calls
@@ -65,7 +65,7 @@ retry(3, function() use ($uberEatsService, $itemId, $available) {
 // On 5xx (server error): retry with backoff
 ```
 
-## Platform Pause (Uber Eats + DoorDash simultaneously)
+## Platform Pause (Uber Eats + Wolt simultaneously)
 ```php
 class PausePlatformsJob implements ShouldQueue
 {
@@ -76,13 +76,13 @@ class PausePlatformsJob implements ShouldQueue
         // Uber Eats
         $uberIntegration = TenantIntegration::active($this->tenantId, 'uber_eats')->first();
         if ($uberIntegration) {
-            retry(3, fn() => $this->uberEats->pauseStore(decrypt($uberIntegration->credentials)));
+            retry(3, fn() => DeliveryPlatformFactory::make(DeliveryPlatform::UberEats, $uberIntegration)->pauseStore());
         }
 
-        // DoorDash
-        $ddIntegration = TenantIntegration::active($this->tenantId, 'doordash')->first();
-        if ($ddIntegration) {
-            retry(3, fn() => $this->doorDash->pauseStore(decrypt($ddIntegration->credentials)));
+        // Wolt
+        $woltIntegration = TenantIntegration::active($this->tenantId, 'wolt')->first();
+        if ($woltIntegration) {
+            retry(3, fn() => DeliveryPlatformFactory::make(DeliveryPlatform::Wolt, $woltIntegration)->pauseStore());
         }
 
         // Broadcast to all connected dashboards

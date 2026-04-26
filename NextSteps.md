@@ -1,7 +1,7 @@
 # ChefLogik — Next Steps
 
 ## Current State
-- **Backend:** 371 tests passing (349 + 22 new Stripe tests)
+- **Backend:** 423+ tests passing
 - **Frontend:** All 12 modules complete (React 19 + TypeScript + MST)
 - **Phase 1 Foundation:** ✓ Complete
 - **Phase 2 Core Modules:** ✓ Complete
@@ -24,19 +24,34 @@
 - Platform admin toggle: `platform.stripe_enabled` (PATCH /api/platform/settings) → returns 503 when disabled
 - 22 tests covering all flows
 
-### 2. SMS — Twilio ← START HERE
-- `SmsProviderInterface` contract + `TwilioSmsProvider` implementation
-- `config/sms.php` driver config
-- Wire stubs: reservation reminders (24h + 2h jobs exist), customer OTP password reset, loyalty campaign dispatch
+### ✓ 2. SMS — Twilio — COMPLETE
+- `SmsProviderInterface` contract + `TwilioSmsProvider` + `NullSmsProvider` (`SMS_DRIVER=null` for local dev)
+- `config/sms.php` driver config; `AppServiceProvider` binding
+- Reservation reminders 24h + 2h — real SMS sent, `reminder_sent_*` flags set
+- Customer OTP password reset (`POST /v1/customer/auth/forgot-password` → SMS OTP → `POST .../reset-password/sms`)
+- Loyalty campaign SMS dispatch via `SendCampaignJob` (target_segment filtering)
+- 10 tests
 
-### 3. Email — Amazon SES
-- `MAIL_MAILER=ses` (uses existing AWS credentials — no new package)
-- Laravel Mailables: `WelcomeEmail`, `StaffPasswordResetEmail`, `CustomerPasswordResetEmail`, `BookingConfirmationEmail`
-- Wire stubs: tenant welcome email in `TenantProvisioningService`, loyalty campaign email dispatch
+### ✓ 3. Email — Amazon SES — COMPLETE
+- `MAIL_MAILER=log` locally, `MAIL_MAILER=ses` in production (existing AWS credentials, no new package)
+- `StaffPasswordResetMail` — `POST /v1/auth/staff/forgot-password` + `POST .../reset-password`
+- `CustomerPasswordResetMail` — `POST /v1/customer/auth/forgot-password` (email path) + `POST .../reset-password/email`
+- `BookingConfirmationMail` — dispatched by `ReservationService::create` via `SendBookingConfirmationJob`
+- `LoyaltyCampaignMail` — `SendCampaignJob` now sends both SMS and email per `communication_prefs`
+- `OwnerWelcomeMail` was already wired; stubs removed
+- Tests in `tests/Feature/Email/`
 
-### 4. Uber Eats + DoorDash *(after payments)*
-- Real webhook ingestion for platform orders
-- `SyncOrderToPlatformsJob` and `SyncMenuItemToPlatformsJob` stubs already exist
+### ✓ 4. Uber Eats + Wolt — COMPLETE
+- `tenant_integrations` table + `TenantIntegration` model (encrypted credentials, settings for lookup)
+- `DeliveryPlatformInterface` contract + `UberEatsService` + `WoltService` + `DeliveryPlatformFactory`
+- `POST /api/webhooks/uber-eats` — HMAC-SHA256 sig verify → idempotency check → `ProcessUberEatsOrderJob` on critical queue
+- `POST /api/webhooks/wolt` — HMAC-SHA256 sig verify → idempotency check → `ProcessWoltOrderJob` on critical queue
+- `ProcessUberEatsOrderJob` + `ProcessWoltOrderJob` — normalise payload, upsert Order, broadcast `NewOrderReceived`
+- `SyncOrderToPlatformsJob` — pushes order status updates back to Uber Eats / Wolt
+- `SyncMenuItemToPlatformsJob` — syncs item availability to all mapped platforms
+- `SyncEightySixToPlatformsJob` — syncs 86 (unavailable) and restore events to all platforms
+- `RefreshDeliveryPlatformTokensCommand` — scheduled every 50 min to refresh OAuth tokens
+- 13 tests covering webhook ingestion (valid/invalid sig, idempotency, unknown store) and sync job logic
 
 ### 5. Kubernetes / Helm Charts
 - Kubernetes manifests for app, workers, reverb
@@ -53,15 +68,15 @@ Gaps identified by comparing all `docs/modules/` specs against the implementatio
 - [x] ~~**Stripe PaymentIntent creation + webhook handler**~~ *(done)*
 - [x] ~~**Pre-paid online orders auto-confirmation after successful PaymentIntent**~~ *(done)*
 - [x] ~~**Delivery platform 5-min auto-confirmation SLA job**~~ *(done)*
-- [ ] `SyncOrderToPlatformsJob` stub → real Uber Eats / DoorDash API calls *(Phase 3)*
+- [x] ~~**`SyncOrderToPlatformsJob`** stub → real Uber Eats / Wolt API calls~~ *(done)*
 - [x] ~~**Stock restoration on pre-preparation cancellations**~~ *(done)*
 
 ### Menu
-- [ ] Sub-categories (Category → Sub-category → Item — only 1 level of categories currently)
-- [ ] `SyncMenuItemToPlatformsJob` stub → real platform sync *(Phase 3)*
-- [ ] SKU ↔ platform `item_id` mapping table
-- [ ] Price verification on incoming platform orders (flag if price differs by > $0.10)
-- [ ] Dietary filters on public QR menu for logged-in customers
+- [x] ~~**Sub-categories (Category → Sub-category → Item)**~~ *(done — `GET /menu/categories` returns nested tree)*
+- [x] ~~**`SyncMenuItemToPlatformsJob`** stub → real Uber Eats / Wolt sync~~ *(done)*
+- [x] ~~**SKU ↔ platform item_id mapping table**~~ *(done — `menu_item_platform_mappings`, Uber Eats + Wolt per Decision 22)*
+- [x] ~~**Price verification on incoming platform orders**~~ *(done — `order_price_flags` table; Uber Eats + Wolt jobs flag when abs(platform_price − our_price) > £0.10)*
+- [x] ~~**Dietary filters on public QR menu for logged-in customers**~~ *(done — `GET /api/v1/customer/menu/{branchId}`, AND logic)*
 
 ### Reservations
 - [ ] No-show deposit requirement flag when `no_show_count >= configurable threshold`
@@ -69,16 +84,16 @@ Gaps identified by comparing all `docs/modules/` specs against the implementatio
 
 ### Events
 - [x] ~~**Stripe deposit collection**~~ *(done)*
-- [ ] Non-refundable booking fee policy per occasion type
-- [ ] Credit limit enforcement — block new bookings for over-limit net-30 corporate accounts
-- [ ] Run sheet PDF export
-- [ ] Overdue pre-event task alerts via Reverb + push notification
-- [ ] Minimum spend charge prompt at bill close
+- [x] ~~**Non-refundable booking fee policy per occasion type**~~ *(done — `branch_event_policies` table, percentage-based per branch + occasion type, partial Stripe refund on cancel)*
+- [x] ~~**Credit limit enforcement — block new bookings for over-limit net-30 corporate accounts**~~ *(done — enforced at confirmation, `POST /events/{id}/approve-credit` for owner override)*
+- [x] ~~**Run sheet PDF export**~~ *(done — `GET /events/{id}/run-sheet/pdf`, works at any lifecycle stage)*
+- [x] ~~**Overdue pre-event task alerts via Reverb + push notification**~~ *(done — `events:alert-overdue-tasks` command, daily at 08:00, FCM/APNS hook left as TODO)*
+- [x] ~~**Minimum spend charge prompt at bill close**~~ *(done — `complete` returns 422 with shortfall; pass `force=true` to override)*
 
 ### Inventory
-- [ ] KDS station assignment — items default to Pass; need dynamic routing (grill / fryer / cold / pass)
-- [ ] Temperature log export (PDF/CSV for environmental health inspection)
-- [ ] Manager alert when an order contains items whose only recipe is `draft` status
+- [x] ~~**KDS station assignment**~~ *(done — `menu_items.kds_station` column; `resolveStation()` reads it; null defaults to pass)*
+- [x] ~~**Temperature log export**~~ *(done — `GET /api/v1/inventory/temperature-logs/export?format=pdf|csv`; `barryvdh/laravel-dompdf` added)*
+- [x] ~~**Manager alert for draft-only recipe**~~ *(done — `DeductStockJob` notifies branch managers via `NotificationService` when item has only draft recipes)*
 
 ### Customers & Loyalty
 - [ ] Event booking 2× loyalty multiplier — link event confirmation to `LoyaltyService`
@@ -96,13 +111,13 @@ Gaps identified by comparing all `docs/modules/` specs against the implementatio
 - [ ] Document expiry alert job — notify 30 days before driving licence / food hygiene / right-to-work expiry
 - [ ] Staff push notification when Branch Manager publishes the weekly schedule
 
-### Notifications — unblocked by confirmed decisions
-- [ ] Reservation reminder SMS (24h + 2h — jobs exist, send is stubbed) *(Decision 8 confirmed)*
-- [ ] Customer OTP / password reset SMS *(Decision 8 confirmed)*
-- [ ] Loyalty campaign SMS dispatch *(Decision 8 confirmed)*
-- [ ] Booking confirmation email *(Decision 9 confirmed)*
-- [ ] Staff / customer password reset email *(Decision 9 confirmed)*
-- [ ] Tenant welcome email in `TenantProvisioningService` *(Decision 9 confirmed)*
+### Notifications — all unblocked items now complete
+- [x] ~~Reservation reminder SMS (24h + 2h)~~ *(done)*
+- [x] ~~Customer OTP / password reset SMS~~ *(done)*
+- [x] ~~Loyalty campaign SMS dispatch~~ *(done)*
+- [x] ~~Booking confirmation email~~ *(done)*
+- [x] ~~Staff / customer password reset email~~ *(done)*
+- [x] ~~Tenant welcome email in `TenantProvisioningService`~~ *(was already wired)*
 
 ---
 

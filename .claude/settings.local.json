@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(composer create-project:*)",
+      "Bash(mkdir:*)",
+      "Bash(composer update:*)",
+      "Bash(composer require:*)",
+      "Bash(php artisan:*)",
+      "Bash(php vendor/bin/phpunit --list-test-files)",
+      "Bash(psql -h 127.0.0.1 -p 6432 -U cheflogiktest_user -d cheflogiktest_db -c \"\\\\d personal_access_tokens\")",
+      "Bash(wait)",
+      "Bash(./vendor/bin/phpunit:*)",
+      "Bash(php:*)",
+      "Bash(grep:*)",
+      "Bash(npx vite:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm test:*)",
+      "Bash(ls /Users/deepak/Projects/ChefLogik/web/.env*)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(git stash:*)",
+      "Bash(npx @tanstack/router-cli generate)",
+      "Bash(node node_modules/.bin/tsr generate)",
+      "Bash(npx eslint *)",
+      "Bash(xargs ls *)",
+      "Bash(python3 -c ' *)"
+    ]
+  }
+}
