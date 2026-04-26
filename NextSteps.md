@@ -108,8 +108,8 @@ Gaps identified by comparing all `docs/modules/` specs against the implementatio
 - [ ] RevPASH calculation must respect special operating hours for affected dates
 
 ### Staff
-- [ ] Document expiry alert job — notify 30 days before driving licence / food hygiene / right-to-work expiry
-- [ ] Staff push notification when Branch Manager publishes the weekly schedule
+- [x] ~~**Document expiry alert job**~~ *(done — `staff:alert-expiring-documents` command, daily at 09:00; also fixed `uploadDocument` to store `type` + `expiry_date` per schema spec; 5 tests)*
+- [x] ~~**Staff push notification when Branch Manager publishes the weekly schedule**~~ *(done — `ShiftService::publishBulk` notifies assigned staff via `NotificationService`; 3 tests)*
 
 ### Notifications — all unblocked items now complete
 - [x] ~~Reservation reminder SMS (24h + 2h)~~ *(done)*
