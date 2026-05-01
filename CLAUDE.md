@@ -114,7 +114,7 @@ Full dynamic role system in Phase 1. Tables: `permissions`, `roles`, `role_permi
 Manual billing for MVP. `subscription_plans` table exists with Starter/Growth/Enterprise (all free, `price_monthly = 0`). Stripe Billing deferred.
 
 ### Infrastructure (Decision 5 & 11)
-Docker Compose for app services only. Postgres, Redis, RabbitMQ are on **shared developer infra** — not in Docker Compose. Kubernetes/Helm/Terraform deferred to Phase 3.
+Docker Compose for app services only. Postgres, Redis, RabbitMQ are on **shared developer infra** — not in Docker Compose. Production deployment uses Jenkins + Terraform (see `docs/07-infrastructure.md`).
 
 ### Pending decisions — these block specific work
 | Decision | What it blocks |
@@ -146,8 +146,8 @@ Do not implement any of the blocked work until the relevant decision is recorded
 | Storage | AWS S3 (`league/flysystem-aws-s3-v3`) |
 | Logging | AWS CloudWatch (`maxbanton/cwh`) |
 | Container | Docker |
-| Orchestration | Kubernetes + Helm (Phase 3) |
-| Infrastructure as code | Terraform (Phase 3) |
+| Orchestration | Kubernetes (via shared Terraform module) |
+| Infrastructure as code | Terraform + Jenkins CI/CD |
 | Tenancy | Manual `TenantScope` + `HasTenantScope` trait (no stancl/tenancy) |
 
 **See `docs/02-tech-stack.md` for full conventions, folder structure, and coding standards.**
@@ -208,8 +208,7 @@ Load the module's skill file and requirement doc:
 - `.claude/skills/frontend-mst.md`
 
 ### When working on infrastructure
-- `docs/07-infrastructure.md` — Kubernetes, Helm, Terraform plan
-- `.claude/skills/kubernetes.md`
+- `docs/07-infrastructure.md` — Docker images, Jenkins CI/CD, Terraform deployment config
 
 ### Cross-cutting rules (read when anything touches multiple modules)
 - `docs/09-cross-module-rules.md` — 86 propagation, WAC authority, tenant isolation, notifications, audit log
@@ -274,8 +273,8 @@ Load the module's skill file and requirement doc:
 - Dynamic role builder UI (the permissions/roles tables are already there from Phase 1)
 - Customer portal (loyalty dashboard, booking history, GDPR self-service)
 - Platform admin panel (tenant management, subscription management)
-- External integrations (Uber Eats, DoorDash, Twilio, SendGrid)
-- Kubernetes manifests and Helm charts
+- External integrations (Uber Eats, Wolt, Twilio, Amazon SES)
+- Jenkins pipelines + Terraform deployment (staging + production)
 
 ---
 

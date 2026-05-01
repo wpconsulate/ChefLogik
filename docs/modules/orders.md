@@ -2,7 +2,7 @@
 Full requirements: 92 numbered requirements (OD-01 through NF-OD-11). See the Orders_Deliveries_Requirements_v2.docx for complete specification. This file covers the key implementation details.
 
 ## 7 Order Channels
-dine_in_pos | dine_in_qr | takeaway_counter | takeaway_phone | online | uber_eats | doordash
+dine_in_pos | dine_in_qr | takeaway_counter | takeaway_phone | online | uber_eats | wolt
 
 ## 9 Lifecycle Stages
 new → confirmed → preparing → ready → out_for_delivery → delivered → served → bill_settled → completed
@@ -32,7 +32,7 @@ Checkout validates address via geocoding → zone check → enforces minimum
 Zone pause: status='paused', does not delete configuration
 
 ## Peak hour throttle
-Manual pause: calls Uber Eats Store Status API + DoorDash Store Status API within 60 seconds
+Manual pause: calls Uber Eats Store Status API + Wolt Store Status API within 60 seconds (Decision 22: Wolt replaces DoorDash)
 Auto-pause: configurable order count threshold triggers automatic pause + manager alert
 
 ## Key events to broadcast via Reverb

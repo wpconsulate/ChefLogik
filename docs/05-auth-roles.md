@@ -74,8 +74,8 @@ class TenantMiddleware
         }
 
         // Set tenant context for the entire request lifecycle
-        // stancl/tenancy initialises the tenant here
-        tenancy()->initialize($user->tenant_id);
+        // Manual TenantScope (no stancl/tenancy — Decision 1)
+        app()->instance('current_tenant_id', $user->tenant_id);
 
         // Make tenant_id and branch_ids available throughout
         $request->merge([

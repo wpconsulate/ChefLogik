@@ -5,46 +5,45 @@
 **Goal:** A working multi-tenant system with orders flowing end-to-end, live dashboard, and Stripe payments. The absolute minimum for a restaurant to actually run.
 
 ### Infrastructure setup
-- [ ] docker-compose.yml for local dev (Postgres, Redis, Reverb, API, Web)
-- [ ] Laravel project scaffolding with directory structure from `docs/02-tech-stack.md`
-- [ ] stancl/tenancy configured (confirm strategy in Discussion 1 first)
-- [ ] TenantScope global scope on all tenant models
-- [ ] TenantMiddleware + tenant resolution from JWT
-- [ ] React project scaffolding with TypeScript strict mode + MST + Axios
+- [x] docker-compose.yml for local dev (Postgres, Redis, Reverb, API, Web)
+- [x] Laravel project scaffolding with directory structure from `docs/02-tech-stack.md`
+- [x] TenantScope global scope on all tenant models (manual implementation — no stancl/tenancy, Decision 1)
+- [x] TenantMiddleware + tenant resolution from JWT
+- [x] React project scaffolding with TypeScript strict mode + MST + Axios
 
 ### Auth system
-- [ ] Three Sanctum guards (staff, customer, platform_admin)
-- [ ] `permissions` table seeded with all ~80 slugs from `config/permissions.php`
-- [ ] `roles` table seeded with 8 system roles
-- [ ] `role_permissions` pivot seeded (system role defaults)
-- [ ] JWT token with permissions array resolved + cached in Redis
-- [ ] Gate registration using cached permissions
-- [ ] TenantMiddleware + PermissionMiddleware chain
-- [ ] Login / logout / me endpoints
-- [ ] AuthStore (MST) + PermissionGate component
+- [x] Three Sanctum guards (staff, customer, platform_admin)
+- [x] `permissions` table seeded with all ~80 slugs from `config/permissions.php`
+- [x] `roles` table seeded with 8 system roles
+- [x] `role_permissions` pivot seeded (system role defaults)
+- [x] JWT token with permissions array resolved + cached in Redis
+- [x] Gate registration using cached permissions
+- [x] TenantMiddleware + PermissionMiddleware chain
+- [x] Login / logout / me endpoints
+- [x] AuthStore (MST) + PermissionGate component
 
 ### Branch & Staff Management
-- [ ] Tenant + branch CRUD endpoints
-- [ ] Staff CRUD + role assignment
-- [ ] `user_roles` with branch_ids scoping
-- [ ] Branch switcher in React (sets X-Branch-Id header)
+- [x] Tenant + branch CRUD endpoints
+- [x] Staff CRUD + role assignment
+- [x] `user_roles` with branch_ids scoping
+- [x] Branch switcher in React (sets X-Branch-Id header)
 
 ### Menu Management
-- [ ] Menu categories + items CRUD
-- [ ] Branch override CRUD
-- [ ] 86 / restore endpoints with dual trigger types (manual + inventory)
-- [ ] MenuStore (MST) + menu management pages
+- [x] Menu categories + items CRUD
+- [x] Branch override CRUD
+- [x] 86 / restore endpoints with dual trigger types (manual + inventory)
+- [x] MenuStore (MST) + menu management pages
 
 ### Orders & Deliveries
-- [ ] All 7 channel ingestion + normalisation pipeline
-- [ ] 9-stage lifecycle with status transitions
-- [ ] Stock deduction event (OrderConfirmed → DeductStockJob)
-- [ ] Stripe Terminal + Stripe Payments integration
-- [ ] Stripe webhook endpoint (signature verified, idempotent)
-- [ ] Basic cancellation (pre-prep = full refund)
-- [ ] Refund engine (Stripe Refunds API)
-- [ ] Laravel Reverb setup + order status WebSocket broadcasts
-- [ ] OrderStore (MST) + live order Kanban dashboard
+- [x] All 7 channel ingestion + normalisation pipeline (uber_eats + wolt — Decision 22)
+- [x] 9-stage lifecycle with status transitions
+- [x] Stock deduction event (OrderConfirmed → DeductStockJob)
+- [x] Stripe Terminal + Stripe Payments integration (Decision 7)
+- [x] Stripe webhook endpoint (signature verified, idempotent)
+- [x] Basic cancellation (pre-prep = full refund)
+- [x] Refund engine (Stripe Refunds API)
+- [x] Laravel Reverb setup + order status WebSocket broadcasts
+- [x] OrderStore (MST) + live order Kanban dashboard
 
 ### Acceptance criteria for Phase 1
 - A manager can log in, see only their tenant's data, create a branch, add staff with roles
@@ -60,50 +59,50 @@
 **Goal:** All operational modules working. A restaurant can fully run day-to-day.
 
 ### Table & Reservation Management
-- [ ] Floor plan CRUD + table state machine (5 states)
-- [ ] Reservation lifecycle (confirmed → arrived → seated → completed / no-show / cancelled)
-- [ ] Availability algorithm (respects special operating hours)
-- [ ] Walk-in profile matching (500ms SLA)
-- [ ] Waitlist management + ETA calculation
-- [ ] 24h and 2h SMS reminders (queued)
-- [ ] Table state WebSocket broadcasts
-- [ ] ReservationStore + floor plan UI
+- [x] Floor plan CRUD + table state machine (5 states)
+- [x] Reservation lifecycle (confirmed → arrived → seated → completed / no-show / cancelled)
+- [x] Availability algorithm (respects special operating hours)
+- [x] Walk-in profile matching (500ms SLA)
+- [x] Waitlist management + ETA calculation
+- [x] 24h and 2h SMS reminders (queued)
+- [x] Table state WebSocket broadcasts
+- [x] ReservationStore + floor plan UI
 
 ### Customer Profiles & Loyalty
-- [ ] Profile auto-creation on booking / walk-in / enrolment
-- [ ] Deduplication (E.164 phone as primary key)
-- [ ] Delivery platform profile matching
-- [ ] Bronze/Silver/Gold tier structure + weekly recalculation job
-- [ ] Points earn on settled orders (atomic loyalty transactions)
-- [ ] Points redemption at POS
-- [ ] GDPR: consent storage, right to access export, right to erasure
-- [ ] Birthday recognition campaigns
-- [ ] CustomerStore + basic loyalty UI
+- [x] Profile auto-creation on booking / walk-in / enrolment
+- [x] Deduplication (E.164 phone as primary key)
+- [x] Delivery platform profile matching
+- [x] Bronze/Silver/Gold tier structure + weekly recalculation job
+- [x] Points earn on settled orders (atomic loyalty transactions)
+- [x] Points redemption at POS
+- [x] GDPR: consent storage, right to access export, right to erasure
+- [x] Birthday recognition campaigns
+- [x] CustomerStore + basic loyalty UI
 
 ### Inventory & Kitchen
-- [ ] Inventory items CRUD with WAC tracking
-- [ ] Recipe CRUD (Draft/Pending/Approved states)
-- [ ] GRN with temperature logging + WAC recalculation
-- [ ] Waste logging (6 types)
-- [ ] Stocktake workflow
-- [ ] KDS WebSocket channel + allergen acknowledgement (30s SLA, hard gate)
-- [ ] Inventory-linked 86 auto-trigger on zero stock
-- [ ] InventoryStore + KDS page
+- [x] Inventory items CRUD with WAC tracking
+- [x] Recipe CRUD (Draft/Pending/Approved states)
+- [x] GRN with temperature logging + WAC recalculation
+- [x] Waste logging (6 types)
+- [x] Stocktake workflow
+- [x] KDS WebSocket channel + allergen acknowledgement (30s SLA, hard gate)
+- [x] Inventory-linked 86 auto-trigger on zero stock
+- [x] InventoryStore + KDS page
 
 ### Events & Functions
-- [ ] 5-phase event lifecycle state machine
-- [ ] Enquiry pipeline → proposal → deposit (Stripe) → confirmed
-- [ ] Event packages + corporate accounts
-- [ ] Pre-event planning tasks
-- [ ] Run sheet generation
-- [ ] Recurring event parent/child model
-- [ ] Post-event billing + invoice generation
-- [ ] EventStore + events management pages
+- [x] 5-phase event lifecycle state machine
+- [x] Enquiry pipeline → proposal → deposit (Stripe) → confirmed
+- [x] Event packages + corporate accounts
+- [x] Pre-event planning tasks
+- [x] Run sheet generation
+- [x] Recurring event parent/child model
+- [x] Post-event billing + invoice generation
+- [x] EventStore + events management pages
 
 ### SaaS onboarding
-- [ ] Tenant signup flow (create tenant + first branch + owner account)
-- [ ] Subscription plan selection (if billing decided in Discussion 2)
-- [ ] Platform admin panel (list/manage tenants)
+- [x] Tenant signup flow (create tenant + first branch + owner account)
+- [x] Subscription plan selection (if billing decided in Discussion 2)
+- [x] Platform admin panel (list/manage tenants)
 
 ### Acceptance criteria for Phase 2
 - Full reservation lifecycle works end-to-end including SMS reminders
@@ -119,44 +118,50 @@
 **Goal:** Analytics working, loyalty campaigns, external integrations live, dynamic roles UI, customer portal.
 
 ### Analytics & Reporting
-- [ ] Hourly aggregation jobs (Horizon)
-- [ ] Daily aggregation jobs (scheduler)
-- [ ] Weekly RFM recalculation job
+- [x] Hourly aggregation jobs (RabbitMQ workers — Decision 10, Horizon not used)
+- [x] Daily aggregation jobs (scheduler)
+- [x] Weekly RFM recalculation job
 - [ ] Monthly CLV + tier recalculation job
-- [ ] 5 role-appropriate dashboards
-- [ ] Menu engineering matrix (Stars/Plowhorses/Puzzles/Dogs)
-- [ ] Churn risk detection + churn risk list
-- [ ] PDF export (dompdf/browsershot) + CSV export
-- [ ] Scheduled report delivery (SendGrid)
-- [ ] Tax/VAT reporting
-- [ ] Financial period close
-- [ ] Audit log viewer
+- [x] 5 role-appropriate dashboards
+- [x] Menu engineering matrix (Stars/Plowhorses/Puzzles/Dogs)
+- [x] Churn risk detection + churn risk list
+- [x] PDF export (dompdf/browsershot) + CSV export
+- [ ] Scheduled report delivery (Amazon SES — Decision 9)
+- [x] Tax/VAT reporting
+- [x] Financial period close
+- [x] Audit log viewer
 
 ### Dynamic role builder UI
-- [ ] Role management pages (list, create, edit, delete custom roles)
-- [ ] Permission group UI (grouped by module with toggle switches)
-- [ ] Role assignment to staff members
+- [x] Role management pages (list, create, edit, delete custom roles)
+- [x] Permission group UI (grouped by module with toggle switches)
+- [x] Role assignment to staff members
 
 ### External integrations (production)
-- [ ] Uber Eats: full menu sync + order management + store status
-- [ ] DoorDash: same as Uber Eats
+- [x] Uber Eats: full menu sync + order management + store status
+- [x] Wolt: full menu sync + order management + store status (Decision 22: Wolt replaces DoorDash)
 - [ ] Twilio: SMS delivery + STOP opt-out sync
-- [ ] SendGrid: email templates + unsubscribe management
-- [ ] Platform throttle (pause delivery platforms from dashboard)
+- [x] Amazon SES: transactional + marketing emails (Decision 9)
+- [x] Platform throttle (pause delivery platforms from dashboard)
 
 ### Customer portal
-- [ ] Customer login/registration
-- [ ] Loyalty balance + tier + progress display
-- [ ] Booking history
-- [ ] GDPR self-service (view data, request deletion)
-- [ ] Communication preference management
+- [x] Customer login/registration
+- [x] Loyalty balance + tier + progress display
+- [x] Booking history
+- [x] GDPR self-service (view data, request deletion)
+- [x] Communication preference management
 
-### Kubernetes production deployment
-- [ ] Helm charts for all services
-- [ ] Horizontal Pod Autoscaler configs
-- [ ] Terraform for cloud resources
-- [ ] CI/CD pipeline (GitHub Actions or equivalent)
-- [ ] Staging environment
+### Production deployment (Jenkins + Terraform)
+- [x] Dockerfile — API (multi-stage: Composer vendor + PHP-FPM/Nginx/Supervisor)
+- [x] Dockerfile — Web (multi-stage: Node/Vite build + Nginx static)
+- [x] Jenkinsfile — API (shared library: build, scan, push, terraform deploy, migrations)
+- [x] Jenkinsfile — Web (shared library: build, scan, push, terraform deploy)
+- [x] terraform/staging.yaml — API (web + 4 workers + scheduler + reverb)
+- [x] terraform/production.yaml — API
+- [x] terraform/staging.yaml — Web
+- [x] terraform/production.yaml — Web
+- [ ] Infisical project created + project IDs filled in staging/production YAMLs
+- [ ] Jenkins pipelines configured for cheflogik-api and cheflogik-web repos
+- [ ] Staging environment verified end-to-end
 
 ### Acceptance criteria for Phase 3
 - All 5 dashboards display accurate data based on test fixtures

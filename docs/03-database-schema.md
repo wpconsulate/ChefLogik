@@ -291,7 +291,7 @@ id              UUID PRIMARY KEY DEFAULT gen_ulid()   -- ULID: high write volume
 tenant_id       UUID NOT NULL FK → tenants
 branch_id       UUID NOT NULL FK → branches
 order_ref       VARCHAR(50) NOT NULL           -- ORD-YYYYMMDD-NNNN
-source          ENUM('dine_in_pos','dine_in_qr','takeaway_counter','takeaway_phone','online','uber_eats','doordash')
+source          ENUM('dine_in_pos','dine_in_qr','takeaway_counter','takeaway_phone','online','uber_eats','wolt')
 table_id        UUID FK → tables
 customer_profile_id UUID FK → customer_profiles
 customer_name   VARCHAR(255)

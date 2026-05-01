@@ -23,7 +23,9 @@
       "Bash(node node_modules/.bin/tsr generate)",
       "Bash(npx eslint *)",
       "Bash(xargs ls *)",
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "Read(//Users/deepak/Projects/DocStore/**)",
+      "Read(//Users/deepak/Projects/kosten.deepakoberoi.com/**)"
     ]
   }
 }

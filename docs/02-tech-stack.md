@@ -24,9 +24,9 @@
 - `stancl/tenancy` — DROPPED (Decision 1: manual Global Scope implementation)
 - `laravel/horizon` — DROPPED (Decision 10: RabbitMQ replaces Redis queue; use RabbitMQ management UI)
 - `spatie/laravel-permission` — NOT USED (custom permission system, see `docs/05-auth-roles.md`)
-- `stripe/stripe-php` — PENDING Decision 7 (payment gateway not confirmed)
-- `twilio/sdk` — PENDING Decision 8 (SMS provider not confirmed)
-- `sendgrid/sendgrid` — PENDING Decision 9 (email provider not confirmed)
+- `stripe/stripe-php ^13.0` — CONFIRMED Decision 7 (payment gateway). Wrapped behind `PaymentGatewayInterface`.
+- `twilio/sdk ^8.0` — CONFIRMED Decision 8 (SMS provider). Wrapped behind `SmsProviderInterface`.
+- Email — CONFIRMED Decision 9: Amazon SES via Laravel's built-in `ses` mail driver. No additional package required (`aws/aws-sdk-php` is a transitive dependency). All emails are Laravel Mailables.
 
 ### Directory structure (Laravel)
 ```
@@ -72,7 +72,7 @@ app/
     Orders/
     Inventory/
     Analytics/        ← Aggregation jobs (hourly, daily, weekly, monthly)
-    Integrations/     ← PENDING: Stripe/UberEats/DoorDash (Decisions 7/8/9)
+    Integrations/     ← Stripe, Uber Eats, Wolt (Decisions 7/22)
   Listeners/          ← Event listeners
   Models/             ← Eloquent models (all tenant-scoped with HasTenantScope)
   Policies/           ← Laravel Policies (permission slugs only, never role names)
@@ -87,7 +87,7 @@ app/
     Inventory/
     Loyalty/
     Analytics/
-    Integrations/     ← PENDING: StripeService, TwilioService, SendGridService
+    Integrations/     ← StripeService (PaymentGatewayInterface), TwilioService (SmsProviderInterface)
   Scopes/             ← TenantScope.php
   Traits/             ← HasTenantScope.php
   DTOs/               ← readonly DTOs (CreateOrderDTO, etc.)

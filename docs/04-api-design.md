@@ -179,10 +179,10 @@ Limit key: `tenant:{tenant_id}:{route_group}`. Customer portal limits are per-cu
 ## Webhook Endpoints
 
 ```
-POST /api/webhooks/stripe     ← ⚠️ Decision 7 pending (payment gateway not confirmed)
-POST /api/webhooks/uber-eats  ← ⚠️ Phase 3 integration — not built in Phase 1
-POST /api/webhooks/doordash   ← ⚠️ Phase 3 integration — not built in Phase 1
-POST /api/webhooks/twilio     ← ⚠️ Decision 8 pending (SMS provider not confirmed)
+POST /api/webhooks/stripe     ← Stripe (Decision 7: Stripe confirmed)
+POST /api/webhooks/uber-eats  ← Uber Eats (Phase 3 production integration)
+POST /api/webhooks/wolt       ← Wolt (Phase 3 production integration; Decision 22: replaces DoorDash)
+POST /api/webhooks/twilio     ← Twilio (Decision 8: Twilio confirmed)
 ```
 
 Webhook endpoints are:
@@ -322,7 +322,7 @@ DELETE /api/v1/menu/modifier-groups/{id}/modifiers/{modifier_id}
 GET    /api/v1/menu/branch-overrides/{branch_id}
 PUT    /api/v1/menu/branch-overrides/{branch_id}/{item_id}
 
--- Platform sync (⚠️ Phase 3 — Uber Eats + DoorDash integrations)
+-- Platform sync (⚠️ Phase 3 — Uber Eats + Wolt integrations)
 POST   /api/v1/menu/sync                     → trigger full platform sync
 ```
 

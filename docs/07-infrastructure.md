@@ -1,286 +1,174 @@
-# Infrastructure — Kubernetes + Terraform + Helm + Docker
+# Infrastructure — Docker + Terraform + Jenkins CI/CD
 
 ## Overview
 
-The application runs as multiple Kubernetes pods, each responsible for a single concern. All images are built from Dockerfiles and deployed via Helm charts. Terraform provisions the cloud infrastructure (cluster, databases, cache, storage).
+Each application repo (`cheflogik-api`, `cheflogik-web`) ships its own CI/CD pipeline. Jenkins builds the Docker image, runs security scanning, pushes to GHCR, and deploys via Terraform. Terraform calls the shared Kubernetes module which provisions namespaced deployments on the shared cluster.
+
+No separate Kubernetes manifests are maintained — the shared Terraform module owns all K8s resource creation.
 
 ---
 
-## Docker Images (one per service)
+## Repository Layout (per repo)
 
 ```
-ghcr.io/{org}/rms-api          ← Laravel API (PHP-FPM + Nginx)
-ghcr.io/{org}/rms-worker       ← Laravel Horizon queue workers
-ghcr.io/{org}/rms-scheduler    ← Laravel scheduler (cron)
-ghcr.io/{org}/rms-reverb       ← Laravel Reverb WebSocket server
-ghcr.io/{org}/rms-web          ← React app (Nginx static)
-```
-
-### api Dockerfile
-```dockerfile
-FROM php:8.3-fpm-alpine
-
-RUN apk add --no-cache nginx postgresql-client redis
-
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-WORKDIR /var/www/html
-COPY . .
-
-RUN composer install --no-dev --optimize-autoloader \
-    && php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
-
-CMD ["php-fpm"]
-```
-
-### web Dockerfile
-```dockerfile
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-FROM nginx:alpine
-COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/nginx.conf
+Dockerfile              ← Multi-stage production build
+Jenkinsfile             ← Pipeline config using jenkins-shared-library
+docker/
+  nginx.conf            ← Nginx server config (included in Docker image)
+  supervisord.conf      ← Supervisor config (API only — runs nginx + php-fpm)
+terraform/
+  staging.yaml          ← Deployment config for staging environment
+  production.yaml       ← Deployment config for production environment
 ```
 
 ---
 
-## Kubernetes Architecture
+## Docker Images
 
-```
-Namespace: rms-production
-  ├── Deployment: rms-api         (3 replicas, HPA min=2 max=10)
-  ├── Deployment: rms-worker      (2 replicas, HPA min=1 max=5)
-  ├── Deployment: rms-scheduler   (1 replica — must be 1)
-  ├── Deployment: rms-reverb      (2 replicas)
-  ├── Deployment: rms-web         (2 replicas, HPA min=1 max=5)
-  ├── Service: rms-api-svc        (ClusterIP)
-  ├── Service: rms-reverb-svc     (ClusterIP, port 8080)
-  ├── Service: rms-web-svc        (ClusterIP)
-  ├── Ingress: rms-ingress        (NGINX ingress controller)
-  │     ├── /api/   → rms-api-svc
-  │     ├── /       → rms-web-svc
-  │     └── ws://   → rms-reverb-svc (WebSocket upgrade)
-  ├── HorizontalPodAutoscaler: rms-api-hpa
-  ├── HorizontalPodAutoscaler: rms-worker-hpa
-  └── ConfigMap + Secrets
-```
+| Repo | Image | Registry |
+|---|---|---|
+| `cheflogik-api` | `ghcr.io/dishuoberoi/cheflogik-api` | GHCR |
+| `cheflogik-web` | `ghcr.io/dishuoberoi/cheflogik-web` | GHCR |
 
----
+### API image (`cheflogik-api`)
 
-## Helm Chart Structure
+Three-stage build:
 
-```
-helm/
-  rms/
-    Chart.yaml
-    values.yaml            ← Default values (dev)
-    values-staging.yaml    ← Staging overrides
-    values-production.yaml ← Production overrides
-    templates/
-      api-deployment.yaml
-      api-service.yaml
-      worker-deployment.yaml
-      scheduler-deployment.yaml
-      reverb-deployment.yaml
-      reverb-service.yaml
-      web-deployment.yaml
-      web-service.yaml
-      ingress.yaml
-      hpa-api.yaml
-      hpa-worker.yaml
-      configmap.yaml
-      secret.yaml          ← References Kubernetes secrets, not values
-      serviceaccount.yaml
-      _helpers.tpl
-```
+1. **vendor** (`php:8.3-cli-alpine`) — Composer installs production dependencies, generates optimised autoloader
+2. **production** (`php:8.3-fpm-alpine`) — PHP-FPM + Nginx + Supervisor in a single image
 
-### values.yaml (example structure)
-```yaml
-api:
-  image:
-    repository: ghcr.io/org/rms-api
-    tag: latest
-    pullPolicy: IfNotPresent
-  replicaCount: 2
-  resources:
-    requests: { cpu: 250m, memory: 512Mi }
-    limits: { cpu: 1000m, memory: 1Gi }
-  env:
-    APP_ENV: production
-    LOG_CHANNEL: stderr
-    QUEUE_CONNECTION: redis
+The same image is reused for all API process types. The default `CMD` runs `supervisord` (Nginx + PHP-FPM). Workers, scheduler, and Reverb override `CMD` via their Kubernetes deployment config:
 
-worker:
-  replicaCount: 2
-  queues: "critical,high,default,analytics,low"
+| Process | CMD |
+|---|---|
+| API (default) | `supervisord` → nginx + php-fpm |
+| worker-critical | `php artisan queue:work rabbitmq --queue=critical ...` |
+| worker-high | `php artisan queue:work rabbitmq --queue=high ...` |
+| worker-default | `php artisan queue:work rabbitmq --queue=default ...` |
+| worker-background | `php artisan queue:work rabbitmq --queue=analytics,low ...` |
+| scheduler | `php artisan schedule:work` |
+| reverb | `php artisan reverb:start --host=0.0.0.0 --port=8080` |
 
-reverb:
-  replicaCount: 2
-  port: 8080
+Exposed port: **8080** (Nginx listens here; PHP-FPM on 9000 internally).
 
-ingress:
-  host: app.yourdomain.com
-  tls: true
-  certManager: true
-```
+### Web image (`cheflogik-web`)
+
+Two-stage build:
+
+1. **builder** (`node:20-alpine`) — `npm run build` compiles the React/TypeScript app via Vite
+2. **production** (`nginx:alpine`) — Nginx serves the static `dist/` assets
+
+**Important:** `VITE_*` environment variables (`VITE_API_URL`, `VITE_REVERB_HOST`, etc.) are baked in at build time by Vite. These must be passed as Docker build args in the Jenkins pipeline for each environment — they cannot be injected at runtime.
+
+Exposed port: **8080**.
 
 ---
 
-## Terraform Resources
+## CI/CD — Jenkins Shared Library
 
-```hcl
-# Key resources to provision:
+All pipeline logic lives in `jenkins-shared-library@main`. The `Jenkinsfile` in each repo calls `buildAndDeployApp()` with application-specific parameters only.
 
-# Kubernetes cluster (example: GKE)
-resource "google_container_cluster" "primary" { ... }
-
-# Cloud SQL — PostgreSQL 16
-resource "google_sql_database_instance" "postgres" {
-  database_version = "POSTGRES_16"
-  settings {
-    tier = "db-custom-4-16384"
-    backup_configuration { enabled = true }
-    ip_configuration { ipv4_enabled = false; private_network = ... }
-  }
-}
-
-# Cloud Memorystore — Redis 7
-resource "google_redis_instance" "cache" {
-  memory_size_gb = 4
-  redis_version  = "REDIS_7_0"
-  tier           = "STANDARD_HA"
-}
-
-# Cloud Storage — S3-compatible
-resource "google_storage_bucket" "media" { ... }
-
-# Kubernetes secrets from Terraform outputs
-resource "kubernetes_secret" "app_secrets" {
-  data = {
-    DB_PASSWORD         = random_password.db.result
-    REDIS_PASSWORD      = random_password.redis.result
-    STRIPE_SECRET_KEY   = var.stripe_secret_key
-    STRIPE_WEBHOOK_KEY  = var.stripe_webhook_key
-    REVERB_APP_SECRET   = random_password.reverb.result
-  }
-}
 ```
+staging branch    → build → scan → push → terraform apply (staging.yaml)
+production branch → build → scan → push → terraform apply (production.yaml)
+```
+
+The shared library handles:
+- Docker image build
+- Trivy security scan (`HIGH,CRITICAL` severity)
+- Push to GHCR
+- Terraform deployment (reads `terraform/{environment}.yaml`)
+- Post-deploy tasks: migrations, config/route cache refresh
+- Rollout verification
+- Automatic rollback on failure
+
+### API pipeline parameters
+
+| Parameter | Value |
+|---|---|
+| `appName` | `cheflogik-api` |
+| `imageRepo` | `dishuoberoi/cheflogik-api` |
+| `enableMigrations` | `true` |
+| `autoMigrateProduction` | `false` (manual approval required) |
+| `healthCheckPath` | `/api/health` |
+| `clearCache` | `true` |
+| `workers` | 6 entries (4 queues + scheduler + reverb) |
+
+### Web pipeline parameters
+
+| Parameter | Value |
+|---|---|
+| `appName` | `cheflogik-web` |
+| `imageRepo` | `dishuoberoi/cheflogik-web` |
+| `enableMigrations` | `false` |
+| `healthCheckPath` | `/health` |
+| `clearCache` | `false` |
 
 ---
 
-## Environment Variables (per pod via Kubernetes secrets)
+## Terraform Deployment Config (YAML)
 
-All sensitive values come from Kubernetes secrets, never from values.yaml or Helm values.
+Each environment's deployment is described in `terraform/staging.yaml` and `terraform/production.yaml`. The Terraform module (`wpconsulate/Kubernetes-Jenkins-Setup`) reads these and creates the Kubernetes resources.
 
-```bash
-# Application
-APP_KEY=base64:...
-APP_ENV=production
-APP_URL=https://app.yourdomain.com
-
-# Database
-DB_CONNECTION=pgsql
-DB_HOST=10.x.x.x          # Private IP from Terraform output
-DB_DATABASE=rms_production
-DB_USERNAME=rms_app
-DB_PASSWORD=<from k8s secret>
-
-# Redis
-REDIS_HOST=10.x.x.x
-REDIS_PASSWORD=<from k8s secret>
-
-# Reverb (WebSocket)
-REVERB_APP_ID=rms-app
-REVERB_APP_KEY=<from k8s secret>
-REVERB_APP_SECRET=<from k8s secret>
-REVERB_HOST=reverb.yourdomain.com
-REVERB_PORT=443
-
-# Stripe
-STRIPE_KEY=pk_live_...
-STRIPE_SECRET=<from k8s secret>
-STRIPE_WEBHOOK_SECRET=<from k8s secret>
-
-# Twilio
-TWILIO_SID=<from k8s secret>
-TWILIO_TOKEN=<from k8s secret>
-TWILIO_FROM=+44...
-
-# SendGrid
-SENDGRID_API_KEY=<from k8s secret>
-
-# S3-compatible storage
-AWS_ACCESS_KEY_ID=<from k8s secret>
-AWS_SECRET_ACCESS_KEY=<from k8s secret>
-AWS_DEFAULT_REGION=eu-west-2
-AWS_BUCKET=rms-media-production
-```
-
----
-
-## Local Development (docker-compose)
+### API config sections
 
 ```yaml
-# docker-compose.yml
-services:
-  api:
-    build: { context: ./api, dockerfile: Dockerfile.dev }
-    volumes: [./api:/var/www/html]
-    ports: ["8000:8000"]
-    depends_on: [postgres, redis]
-    environment:
-      DB_HOST: postgres
-      REDIS_HOST: redis
-
-  worker:
-    build: { context: ./api, dockerfile: Dockerfile.dev }
-    command: php artisan horizon
-    volumes: [./api:/var/www/html]
-    depends_on: [postgres, redis]
-
-  scheduler:
-    build: { context: ./api, dockerfile: Dockerfile.dev }
-    command: php artisan schedule:work
-    volumes: [./api:/var/www/html]
-
-  reverb:
-    build: { context: ./api, dockerfile: Dockerfile.dev }
-    command: php artisan reverb:start --port=8080
-    ports: ["8080:8080"]
-
-  web:
-    build: { context: ./web, dockerfile: Dockerfile.dev }
-    volumes: [./web:/app]
-    ports: ["3000:3000"]
-    command: npm run dev
-
-  postgres:
-    image: postgres:16-alpine
-    environment: { POSTGRES_DB: rms_dev, POSTGRES_USER: rms, POSTGRES_PASSWORD: secret }
-    volumes: [postgres_data:/var/lib/postgresql/data]
-    ports: ["5432:5432"]
-
-  redis:
-    image: redis:7-alpine
-    ports: ["6379:6379"]
-
-volumes:
-  postgres_data:
+image:          # Docker image + pull secret
+env:            # Non-secret environment variables
+domains:        # Ingress hostnames (TLS via cert-manager)
+secrets:        # Infisical secret injection config
+postgres:       # enabled: true → module provisions DB on shared infra
+redis:          # enabled: true → module provisions Redis on shared infra
+web:            # Main API container — resources, HPA, health probes
+workers:        # List of worker deployments — each gets its own CMD override
+scheduler:      # Single-replica Laravel scheduler deployment
+reverb:         # Laravel Reverb WebSocket server deployment
 ```
+
+### Web config sections
+
+```yaml
+image:          # Docker image + pull secret
+env:            # NODE_ENV only (VITE_* are build-time, not runtime)
+domains:        # Ingress hostnames
+secrets:        # Infisical secret injection config
+web:            # Nginx container — resources, HPA, health probes
+```
+
+---
+
+## Environments and Domains
+
+| Environment | API | Web |
+|---|---|---|
+| Staging | `staging.api.cheflogik.com` | `staging.app.cheflogik.com` |
+| Production | `api.cheflogik.com` | `app.cheflogik.com` |
+
+TLS certificates are provisioned automatically by cert-manager:
+- Staging: `letsencrypt-staging` issuer
+- Production: `letsencrypt-prod` issuer
+
+---
+
+## Secrets Management — Infisical
+
+All sensitive values (database credentials, Stripe keys, Twilio keys, AWS keys, APP_KEY, Reverb secrets) are stored in Infisical and injected into pods at runtime by the Terraform module. Nothing sensitive goes into `staging.yaml` / `production.yaml` or Jenkins build config.
+
+Update the `secrets.projectId` field in each YAML after creating the Infisical project for ChefLogik.
+
+---
+
+## Shared Infrastructure
+
+Postgres, Redis, and RabbitMQ are provisioned on shared cluster infrastructure. Setting `postgres: enabled: true` and `redis: enabled: true` in the YAML instructs the Terraform module to allocate per-app databases/namespaces on the shared instances. RabbitMQ vhost configuration is done manually.
 
 ---
 
 ## Health Check Endpoints
 
 ```
-GET /api/health          → { status: "ok", db: "ok", redis: "ok", version: "1.0.0" }
-GET /api/health/ready    → Kubernetes readiness probe (checks DB connection)
-GET /api/health/live     → Kubernetes liveness probe (lightweight ping)
+GET /api/health        → { status: "ok", version: "1.0.0" }   — liveness (lightweight)
+GET /api/health/ready  → checks DB + Redis connection          — readiness probe
+GET /api/health/live   → lightweight ping                      — liveness probe
+GET /health            → nginx returns 200 "ok"                — web liveness + readiness
 ```

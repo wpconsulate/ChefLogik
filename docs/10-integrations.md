@@ -283,31 +283,36 @@ class TwilioService
 
 ---
 
-## 5. SendGrid Email
+## 5. Email — Amazon SES
+
+**Decision 9:** Amazon SES via Laravel's built-in `ses` mail driver. No additional package — `aws/aws-sdk-php` is already a transitive dependency of `league/flysystem-aws-s3-v3`.
+
+**Configuration:** `MAIL_MAILER=ses` in `.env`. Shares `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION` credentials with S3. Override the SES region with `AWS_SES_REGION` if it differs from S3.
+
+All emails are standard Laravel Mailables (`php artisan make:mail`). Switching transport (e.g. to Mailgun or SMTP) requires only a `.env` change — no code changes.
 
 ```php
-class SendGridService
+// Example Mailable
+class BookingConfirmationMail extends Mailable
 {
-    public function send(string $to, string $templateId, array $templateData, bool $isTransactional = true): void
+    public function __construct(private readonly Reservation $reservation) {}
+
+    public function envelope(): Envelope
     {
-        $email = new \SendGrid\Mail\Mail();
-        $email->setFrom(config('services.sendgrid.from_email'), config('services.sendgrid.from_name'));
-        $email->addTo($to);
-        $email->setTemplateId($templateId);
-        $email->addDynamicTemplateDatas($templateData);
+        return new Envelope(subject: 'Your booking is confirmed');
+    }
 
-        // Transactional emails bypass global unsubscribe
-        // Marketing emails respect it
-        if (!$isTransactional) {
-            $email->setAsm(new \SendGrid\Mail\Asm(config('services.sendgrid.unsubscribe_group_id')));
-        }
-
-        $this->client->send($email);
+    public function content(): Content
+    {
+        return new Content(view: 'emails.booking-confirmation');
     }
 }
+
+// Dispatching
+Mail::to($reservation->guest_email)->queue(new BookingConfirmationMail($reservation));
 ```
 
-Template IDs are stored in `config/mail-templates.php` and managed in SendGrid's Dynamic Templates UI. Template changes require no code deployment.
+Transactional messages (booking confirmation, order receipt, password reset) bypass marketing opt-outs. Marketing campaign emails check `customer_profiles.communication_prefs.email_marketing` before sending.
 
 ---
 
