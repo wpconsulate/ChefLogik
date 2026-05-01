@@ -23,7 +23,7 @@ api-build: ## Build frontend docker image
 	cd api && docker build -t $(API_IMAGE) .
 
 api-run: ## Build frontend docker image
-	cd api && docker run --name $(API_CONTAINER) --env-file ./.env -d -p 8000:8000 $(API_IMAGE)
+	cd api && docker run --name $(API_CONTAINER) --network shared_network --env-file ./.env.docker -d -p 8000:8000 $(API_IMAGE)
 
 api-shell: ## Open a bash shell in the app container
 	cd api && docker exec -it $(API_CONTAINER) bash
