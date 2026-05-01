@@ -25,7 +25,11 @@
       "Bash(xargs ls *)",
       "Bash(python3 -c ' *)",
       "Read(//Users/deepak/Projects/DocStore/**)",
-      "Read(//Users/deepak/Projects/kosten.deepakoberoi.com/**)"
+      "Read(//Users/deepak/Projects/kosten.deepakoberoi.com/**)",
+      "Bash(docker exec cheflogik-web *)",
+      "Bash(curl -sv http://localhost:5500/)",
+      "Bash(curl -sv http://127.0.0.1:5500/)",
+      "Bash(docker build *)"
     ]
   }
 }
