@@ -102,7 +102,7 @@
 ### SaaS onboarding
 - [x] Tenant signup flow (create tenant + first branch + owner account)
 - [x] Subscription plan selection (if billing decided in Discussion 2)
-- [x] Platform admin panel (list/manage tenants)
+- [x] Platform admin panel — EXTRACTED to standalone `/admin` app (see Phase 3)
 
 ### Acceptance criteria for Phase 2
 - Full reservation lifecycle works end-to-end including SMS reminders
@@ -150,6 +150,22 @@
 - [x] GDPR self-service (view data, request deletion)
 - [x] Communication preference management
 
+### Platform admin app (`/admin`) — COMPLETE
+- [x] Standalone Vite app (React 19, TanStack Router, MST, Tailwind v4) at port 5502
+- [x] Split-panel login with 2-step OTP flow
+- [x] Collapsible dark-indigo sidebar (220px / 64px), 4 nav groups, 9 routes
+- [x] Dashboard — KPI cards, MRR area chart, plan distribution, recent sign-ups
+- [x] Tenants — searchable table, status filter tabs, slide-in detail panel, new tenant wizard, impersonate/suspend actions
+- [x] Billing & Plans — plan cards + mock revenue breakdown
+- [x] System Health — 8-service status table, incident log
+- [x] Feature Flags — toggleable global/tenant flags
+- [x] Platform Analytics — KPI tiles, bar chart, region revenue table
+- [x] Users & Roles — admin accounts + roles tables
+- [x] Audit Logs — immutable log table with search
+- [x] Support Tickets — ticket queue with priority/status badges
+- [x] Cross-app impersonation (URL params → staff app reads on load)
+- [x] `PlatformStore` singleton (no RootStore); rehydrates from `cl_admin_token`
+
 ### Production deployment (Jenkins + Terraform)
 - [x] Dockerfile — API (multi-stage: Composer vendor + PHP-FPM/Nginx/Supervisor)
 - [x] Dockerfile — Web (multi-stage: Node/Vite build + Nginx static)
@@ -159,8 +175,12 @@
 - [x] terraform/production.yaml — API
 - [x] terraform/staging.yaml — Web
 - [x] terraform/production.yaml — Web
+- [x] Dockerfile — Admin (multi-stage: Node/Vite build + Nginx static)
+- [x] Jenkinsfile — Admin (shared library: build, scan, push, terraform deploy)
+- [x] terraform/staging.yaml — Admin
+- [x] terraform/production.yaml — Admin
 - [ ] Infisical project created + project IDs filled in staging/production YAMLs
-- [ ] Jenkins pipelines configured for cheflogik-api and cheflogik-web repos
+- [ ] Jenkins pipelines configured for cheflogik-api, cheflogik-web, and cheflogik-admin repos
 - [ ] Staging environment verified end-to-end
 
 ### Acceptance criteria for Phase 3

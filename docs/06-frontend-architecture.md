@@ -138,8 +138,10 @@ const AuthStore = types
 
 ## RootStore
 
+The staff app (`/web`) uses a RootStore that aggregates all domain stores. The admin app (`/admin`) has no RootStore — it uses a single `PlatformStore` singleton.
+
 ```typescript
-// stores/RootStore.ts
+// stores/root.ts  (staff app only)
 const RootStore = types
   .model('RootStore', {
     auth: types.optional(AuthStore, {}),
@@ -288,43 +290,89 @@ apiClient.interceptors.response.use(
 );
 ```
 
-## Routing — Role-Gated Pages
+## Routing — TanStack Router (file-based)
+
+Both apps use TanStack Router v1 with the Vite plugin (`@tanstack/router-plugin`). Routes are defined as files under `src/routes/`; `routeTree.gen.ts` is auto-generated on `vite dev` / `vite build` — never edit it manually.
+
+### Staff app routing pattern
 
 ```typescript
-// App.tsx
-const App = observer(() => {
-  const { auth } = useStore();
+// routes/_authenticated.tsx — pathless layout route
+export const Route = createFileRoute('/_authenticated')({
+  beforeLoad: ({ context }) => {
+    if (!rootStore.auth.isAuthenticated) throw redirect({ to: '/login' })
+    // Handle cross-app impersonation token from query params
+    const params = new URLSearchParams(window.location.search)
+    const token = params.get('impersonate_token')
+    if (token) { /* store token, strip from URL */ }
+  },
+  component: () => <AppShell><Outlet /></AppShell>,
+})
 
-  return (
-    <Routes>
-      {/* Public */}
-      <Route path="/login" element={<LoginPage />} />
-
-      {/* Staff — requires auth */}
-      <Route element={<RequireStaffAuth />}>
-        <Route path="/dashboard" element={<Dashboard />} />
-
-        {/* Orders — all staff with orders.view */}
-        <Route element={<RequirePermission permission="orders.view" />}>
-          <Route path="/orders" element={<OrdersPage />} />
-        </Route>
-
-        {/* Analytics — only with dashboard permission */}
-        <Route element={<RequirePermission permission="analytics.owner_dashboard" />}>
-          <Route path="/analytics/owner" element={<OwnerDashboard />} />
-        </Route>
-
-        {/* Platform admin — separate layout */}
-        <Route element={<RequirePlatformAdmin />}>
-          <Route path="/platform/*" element={<PlatformAdminLayout />} />
-        </Route>
-      </Route>
-
-      {/* Customer portal */}
-      <Route element={<RequireCustomerAuth />}>
-        <Route path="/my-account/*" element={<CustomerPortalLayout />} />
-      </Route>
-    </Routes>
-  );
-});
+// routes/_authenticated/orders.tsx
+export const Route = createFileRoute('/_authenticated/orders')({
+  component: OrdersPage,
+})
 ```
+
+Permission gating is done inside page components using `authStore.can('permission.slug')` or `<PermissionGate permission="...">`. There is no route-level permission enforcement — the API always re-validates.
+
+### Admin app routing pattern
+
+```typescript
+// routes/_authenticated.tsx
+export const Route = createFileRoute('/_authenticated')({
+  beforeLoad: () => {
+    if (!platformStore.isAuthenticated) throw redirect({ to: '/login' })
+  },
+  component: () => <AdminShell><Outlet /></AdminShell>,
+})
+```
+
+---
+
+## Platform Admin App (`/admin`)
+
+The admin app is a fully independent Vite project — it does **not** share code with the staff app.
+
+### Architecture differences vs staff app
+
+| | Staff app (`/web`) | Admin app (`/admin`) |
+|---|---|---|
+| Store | `RootStore` with many sub-stores | Single `PlatformStore` |
+| WebSocket | Laravel Echo + Reverb | None |
+| Design tokens | Moniex Navy palette | ADM: dark-indigo sidebar `#1E293B`, accent `#6366F1` |
+| Auth guard | `authStore.isAuthenticated` | `platformStore.isAuthenticated` |
+| Session key | `cl_token` | `cl_admin_token` |
+
+### PlatformStore singleton
+
+```typescript
+// stores/context.ts
+export const platformStore: PlatformStoreType = PlatformStore.create({})
+export function usePlatformStore(): PlatformStoreType { return platformStore }
+```
+
+No React context is needed — routes import `platformStore` directly.
+
+### Cross-app impersonation flow
+
+1. Admin clicks **Impersonate** on a tenant row in `/admin/tenants`
+2. API issues a short-lived impersonation token scoped to that tenant
+3. Admin app calls `window.open(\`${STAFF_APP_URL}/dashboard?impersonate_token=TOKEN&tenant_name=NAME\`, '_blank')`
+4. Staff app `_authenticated.tsx` reads params on load via `useEffect`, sets `localStorage` + API token, strips params from URL with `window.history.replaceState`
+5. Staff app's `AppShell` shows an impersonation banner; clicking **End** clears the token and redirects back to `VITE_ADMIN_URL`
+
+### ADM design tokens
+
+Defined in `/admin/src/index.css` using Tailwind v4 `@theme inline`:
+
+| Token | Value |
+|---|---|
+| `--adm-bg` | `#F4F6F9` |
+| `--adm-sidebar` | `#1E293B` |
+| `--adm-accent` | `#6366F1` |
+| `--adm-accent-light` | `#EEF2FF` |
+| `--adm-text` | `#0F172A` |
+| `--adm-muted` | `#64748B` |
+| `--adm-border` | `#E2E8F0` |

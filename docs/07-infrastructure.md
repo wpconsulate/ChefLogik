@@ -2,7 +2,7 @@
 
 ## Overview
 
-Each application repo (`cheflogik-api`, `cheflogik-web`) ships its own CI/CD pipeline. Jenkins builds the Docker image, runs security scanning, pushes to GHCR, and deploys via Terraform. Terraform calls the shared Kubernetes module which provisions namespaced deployments on the shared cluster.
+Each application repo (`cheflogik-api`, `cheflogik-web`, `cheflogik-admin`) ships its own CI/CD pipeline. Jenkins builds the Docker image, runs security scanning, pushes to GHCR, and deploys via Terraform. Terraform calls the shared Kubernetes module which provisions namespaced deployments on the shared cluster.
 
 No separate Kubernetes manifests are maintained — the shared Terraform module owns all K8s resource creation.
 
@@ -29,6 +29,7 @@ terraform/
 |---|---|---|
 | `cheflogik-api` | `ghcr.io/dishuoberoi/cheflogik-api` | GHCR |
 | `cheflogik-web` | `ghcr.io/dishuoberoi/cheflogik-web` | GHCR |
+| `cheflogik-admin` | `ghcr.io/dishuoberoi/cheflogik-admin` | GHCR |
 
 ### API image (`cheflogik-api`)
 
@@ -58,7 +59,18 @@ Two-stage build:
 1. **builder** (`node:20-alpine`) — `npm run build` compiles the React/TypeScript app via Vite
 2. **production** (`nginx:alpine`) — Nginx serves the static `dist/` assets
 
-**Important:** `VITE_*` environment variables (`VITE_API_URL`, `VITE_REVERB_HOST`, etc.) are baked in at build time by Vite. These must be passed as Docker build args in the Jenkins pipeline for each environment — they cannot be injected at runtime.
+**Important:** `VITE_*` environment variables (`VITE_API_URL`, `VITE_REVERB_HOST`, `VITE_ADMIN_URL`, etc.) are baked in at build time by Vite. These must be passed as Docker build args in the Jenkins pipeline for each environment — they cannot be injected at runtime.
+
+Exposed port: **8080**.
+
+### Admin image (`cheflogik-admin`)
+
+Same two-stage pattern as the web image:
+
+1. **builder** (`node:20-alpine`) — `npm run build` compiles the admin Vite app
+2. **production** (`nginx:alpine`) — Nginx serves the static `dist/` assets
+
+**Important:** `VITE_*` environment variables (`VITE_API_URL`, `VITE_STAFF_APP_URL`) are baked in at build time.
 
 Exposed port: **8080**.
 
@@ -104,6 +116,16 @@ The shared library handles:
 | `healthCheckPath` | `/health` |
 | `clearCache` | `false` |
 
+### Admin pipeline parameters
+
+| Parameter | Value |
+|---|---|
+| `appName` | `cheflogik-admin` |
+| `imageRepo` | `dishuoberoi/cheflogik-admin` |
+| `enableMigrations` | `false` |
+| `healthCheckPath` | `/health` |
+| `clearCache` | `false` |
+
 ---
 
 ## Terraform Deployment Config (YAML)
@@ -135,14 +157,24 @@ secrets:        # Infisical secret injection config
 web:            # Nginx container — resources, HPA, health probes
 ```
 
+### Admin config sections (same shape as web)
+
+```yaml
+image:          # Docker image + pull secret
+env:            # NODE_ENV only
+domains:        # Ingress hostnames (admin.cheflogik.com)
+secrets:        # Infisical secret injection config
+web:            # Nginx container — resources, HPA, health probes
+```
+
 ---
 
 ## Environments and Domains
 
-| Environment | API | Web |
-|---|---|---|
-| Staging | `staging.api.cheflogik.com` | `staging.app.cheflogik.com` |
-| Production | `api.cheflogik.com` | `app.cheflogik.com` |
+| Environment | API | Staff app | Admin app |
+|---|---|---|---|
+| Staging | `staging.api.cheflogik.com` | `staging.app.cheflogik.com` | `staging.admin.cheflogik.com` |
+| Production | `api.cheflogik.com` | `app.cheflogik.com` | `admin.cheflogik.com` |
 
 TLS certificates are provisioned automatically by cert-manager:
 - Staging: `letsencrypt-staging` issuer
