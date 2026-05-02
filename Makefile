@@ -1,7 +1,28 @@
 WEB_IMAGE := cheflogik-web-img
 WEB_CONTAINER := cheflogik-web
+
 API_IMAGE := cheflogik-api-img
 API_CONTAINER := cheflogik-api
+
+ADMIN_IMAGE := cheflogik-admin-img
+ADMIN_CONTAINER := cheflogik-admin
+
+
+# ── Backend API  ────────────────────────────────────────────────────
+api-build: ## Build frontend docker image
+	cd api && docker build -t $(API_IMAGE) .
+
+api-run: ## Build frontend docker image
+	cd api && docker run --name $(API_CONTAINER) --network shared_network --env-file ./.env.docker -d -p 8000:8000 $(API_IMAGE)
+
+api-stop: ## Stop and remove the frontend container
+	docker stop $(API_CONTAINER) && docker rm $(API_CONTAINER)
+
+api-restart: api-stop api-build api-run
+
+api-shell: ## Open a bash shell in the app container
+	cd api && docker exec -it $(API_CONTAINER) bash
+
 
 # ── Frontend  ────────────────────────────────────────────────────
 web-build: ## Build frontend docker image
@@ -18,12 +39,18 @@ web-restart: web-stop web-build web-run ## Stop, rebuild, and restart the fronte
 web-shell: ## Open a bash shell in the app container
 	docker exec -it $(WEB_CONTAINER) sh
 
-# ── Backend API  ────────────────────────────────────────────────────
-api-build: ## Build frontend docker image
-	cd api && docker build -t $(API_IMAGE) .
 
-api-run: ## Build frontend docker image
-	cd api && docker run --name $(API_CONTAINER) --network shared_network --env-file ./.env.docker -d -p 8000:8000 $(API_IMAGE)
+# ── Admin Dashboard  ────────────────────────────────────────────────────
+admin-build: ## Build frontend docker image
+	cd admin && docker build -t $(ADMIN_IMAGE) .
 
-api-shell: ## Open a bash shell in the app container
-	cd api && docker exec -it $(API_CONTAINER) bash
+admin-run: ## Build frontend docker image
+	cd admin && docker run --name $(ADMIN_CONTAINER) --network shared_network --env-file ./.env -d -p 5600:5600 $(ADMIN_IMAGE)
+
+admin-stop: ## Stop and remove the frontend container
+	docker stop $(ADMIN_CONTAINER) && docker rm $(ADMIN_CONTAINER)
+
+admin-restart: admin-stop admin-build admin-run
+
+admin-shell: ## Open a bash shell in the app container
+	cd admin && docker exec -it $(ADMIN_CONTAINER) bash
