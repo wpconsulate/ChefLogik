@@ -1,7 +1,7 @@
 # UI Design → Web App Implementation Plan
 
 ## Context
-Port the complete React UI prototype from /UI/*.jsx (vanilla React + inline styles) into the existing Vite + React 18 + TypeScript + Tailwind v4 + MST web app at /web. Every screen must match the design visually. Global shared components must be created. Existing boilerplate assets replaced.
+Port the complete React UI prototype from /UI/*.jsx (vanilla React + inline styles) into the existing Vite + **React 19.2** + TypeScript ~6.0 + Tailwind v4 + MST web app at /web (dev server port **5500**). Every screen must match the design visually. Global shared components must be created. Existing boilerplate assets replaced.
 
 Backend gaps must be filled before or in parallel with the relevant frontend tasks. Backend tasks are prefixed **B**; frontend tasks are prefixed **T**.
 
@@ -44,6 +44,30 @@ Wave 5 ── T8  T9  T10 T11 T12         (all screens in parallel; T8 wires B2,
            T13 T14 T15 T16 T17         T5 wires B1; all need T4 + T7)
 Wave 6 ── T18                          (asset cleanup; needs all screens)
 ```
+
+---
+
+## Codebase Quick-Reference
+
+| What | Where |
+|---|---|
+| CSS tokens + themes | `web/src/index.css` (`:root` cl-* at lines 108-119; theme blocks 182-239) |
+| Theme type + cookie | `web/src/lib/theme.ts` (ThemeId line 3; THEMES line 13; getThemeCookie line 24) |
+| Root MST store | `web/src/stores/root.ts` (add new stores here) |
+| Store hooks | `web/src/stores/context.tsx` (add `useXxxStore()` hooks here) |
+| ApiService singleton | `web/src/services/api.ts` — `api.get/post/put/patch/delete(url, ...)` |
+| Auth store | `web/src/stores/AuthStore.ts` — `login()` at line 60, `logout()` at line 93 |
+| Notification store | `web/src/stores/NotificationStore.ts` — `fetchNotifications`, `markAllRead`, `receiveNotification` |
+| Notification WS | `web/src/websocket/notificationChannel.ts` — channel: `user.{userId}.notifications` |
+| WS echo init | `web/src/websocket/echo.ts` |
+| Existing AppShell | `web/src/components/layout/AppShell.tsx` — impersonation banner 122-140, WS init 95-106 |
+| Login page | `web/src/components/auth/LoginPage.tsx` — basic sign-in only (188 lines) |
+| Auth controller | `api/app/Http/Controllers/Api/V1/Auth/StaffAuthController.php` — login 27, me 137 |
+| Notification controller | `api/app/Http/Controllers/Api/V1/Notifications/NotificationController.php` |
+| Notification resource | `api/app/Http/Resources/Notifications/NotificationResource.php` — add `icon_type` |
+| Notification event | `api/app/Events/Notifications/NotificationCreated.php` — broadcasts `.notification.created` |
+| Dashboard controller | `api/app/Http/Controllers/Api/V1/Analytics/DashboardController.php` — add `operationalSummary()` |
+| Routes file | `api/routes/api.php` |
 
 ---
 
@@ -204,13 +228,13 @@ Read and map the following before writing any code. Produce a short findings not
 | B1.2 | **Migration**: Add `failed_login_attempts int default 0`, `locked_until timestamp null` to `users` table |
 | B1.3 | **Service**: Create `App\Services\Auth\StaffOtpService` — `generate(userId): string` (6-digit, store in Redis key `otp:{userId}:{mode}`, TTL 600s), `verify(userId, mode, code): bool` (consume on success) |
 | B1.4 | **Auth controller — account lock**: In `AuthService::loginStaff()`, after failed credential check increment `failed_login_attempts`; after 5 failures set `locked_until = now()+30min`; at login start if `locked_until > now()` return 423 `{ message, locked_until }` |
-| B1.5 | **New endpoint**: `POST /api/v1/auth/otp/send` — sends 6-digit code via email (or SMS when Decision 8 resolved); modes: `reset` only for now (2FA is opt-in, defer until needed) |
+| B1.5 | **New endpoint**: `POST /api/v1/auth/otp/send` — generates 6-digit code, stores in Redis, **logs code to application log in dev** (email dispatch blocked by **Decision 9 — email provider pending**; add a `// TODO Decision 9` comment and dispatch `StaffOtpMailJob` once resolved); modes: `reset` only for now |
 | B1.6 | **New endpoint**: `POST /api/v1/auth/otp/verify` — validates code; on success for `reset` mode returns a short-lived password-reset token; replaces current email-link verify step |
-| B1.7 | **Adapt existing reset flow**: `POST /api/v1/auth/reset-password` — accept both old email-link token and new OTP-issued token (backwards compatible) |
-| B1.8 | **Frontend wire-up** (do in T5): `authStore.login()` handles 423 → navigate to Locked screen; `authStore.requestPasswordReset()` calls OTP send; `authStore.verifyOtp()` calls OTP verify |
+| B1.7 | **Adapt existing reset flow**: `POST /api/v1/auth/reset-password` (`StaffAuthController::resetPassword`, line 116) — accept both old email-link token and new OTP-issued token (backwards compatible) |
+| B1.8 | **Frontend wire-up** (do in T5): `AuthStore.login()` (`stores/AuthStore.ts:60`) — add `lockedUntil: types.maybeNull(types.string)` field; catch AxiosError `err.response?.status === 423` → set `self.lockedUntil`; add `requestPasswordReset(email, tenantSlug)` flow action; add `verifyOtp(code, mode)` flow action |
 | B1.9 | **Tests**: locked-after-5-failures, OTP-send, OTP-verify-success, OTP-verify-wrong-code, OTP-expired |
 
-**Key files:** `api/app/Services/Auth/StaffOtpService.php` (new), `api/app/Services/Auth/AuthService.php`, `api/app/Http/Controllers/Api/V1/Auth/StaffAuthController.php`, new migration
+**Key files:** `api/app/Services/Auth/StaffOtpService.php` (new), `api/app/Services/Auth/AuthService.php`, `api/app/Http/Controllers/Api/V1/Auth/StaffAuthController.php` (login at line 27, resetPassword at line 116), new migration; frontend: `web/src/stores/AuthStore.ts:60-73`
 
 ---
 
@@ -237,7 +261,9 @@ Four live stat cards: **Active Orders**, **Tables Seated**, **Walk-in Waitlist**
 | B2.6 | **Frontend wire-up** (do in T8): `DashboardStore.fetchOperationalSummary(branchId)` calls this endpoint; stats bar reads from store |
 | B2.7 | **Tests**: counts correct for tenant scope, zero state (no orders/tables), multi-tenant isolation |
 
-**Key files:** `api/app/Http/Controllers/Api/V1/Analytics/DashboardController.php` (add method), `api/routes/api.php`
+**Key files:** `api/app/Http/Controllers/Api/V1/Analytics/DashboardController.php` (add `operationalSummary()` method after `kitchenDashboard()` at line 54), `api/routes/api.php`
+
+**New frontend store required:** `DashboardStore` does not yet exist in `root.ts`. Create `web/src/stores/DashboardStore.ts` with `operational` map + `fetchOperationalSummary(branchId)` flow action. Add to `root.ts`: `dashboard: types.optional(DashboardStore, {})`. Add `useDashboardStore()` hook to `web/src/stores/context.tsx` following existing hook pattern (e.g. `useAnalyticsStore` at line 58).
 
 ---
 
@@ -276,30 +302,40 @@ Build the minimum required to power the dropdown: channel list + last message + 
 
 **Key files:** New migrations, `api/app/Models/MessageChannel.php`, `api/app/Models/Message.php`, `api/app/Http/Controllers/Api/V1/Messages/MessageChannelController.php`, `api/app/Events/MessageSent.php`, `api/routes/api.php`
 
+**New frontend store required:** `MessagesStore` does not yet exist. Create `web/src/stores/MessagesStore.ts` (channels map + `fetchChannels()` + `receiveMessage()` flow actions). Add to `root.ts` alongside other stores. Add `useMessagesStore()` hook to `context.tsx`.
+
+**New WebSocket channel:** Create `web/src/websocket/messagesChannel.ts` following the pattern of `notificationChannel.ts` — subscribe to `messages.{tenantId}` private channel, listen for `.message.sent` event, call `MessagesStore.receiveMessage()`.
+
 ---
 
 ## B4 — Notifications: Route Verification + Broadcast Payload
 **Depends on: B0.**
 
-### What exists
-All four endpoints are implemented in `NotificationController`:
-- `GET /api/v1/notifications` — paginated list (30 per page)
-- `GET /api/v1/notifications/unread-count` — `{ count: int }`
-- `POST /api/v1/notifications/{id}/mark-read` — marks one read
-- `POST /api/v1/notifications/mark-all-read` — marks all read
+> **Status note**: B4 is ~90% complete already. All routes, the broadcast event, and the frontend subscription exist. Only remaining gap: `icon_type` missing from `NotificationResource`.
+
+### What exists (verified)
+- `GET /api/v1/notifications` — registered ✓ (`api/routes/api.php:407`)
+- `GET /api/v1/notifications/unread-count` — registered ✓
+- `PATCH /api/v1/notifications/{notification}/read` — registered ✓ (**not** POST — plan was wrong)
+- `POST /api/v1/notifications/mark-all-read` — registered ✓
+- `NotificationResource` (`api/app/Http/Resources/Notifications/NotificationResource.php`) returns: `id`, `type`, `title`, `body`, `data`, `read_at`, `created_at` ✓ — **`icon_type` missing**
+- `NotificationCreated` event (`api/app/Events/Notifications/NotificationCreated.php`) exists ✓ — broadcasts on `user.{recipientId}.notifications` private channel ✓ with event name `.notification.created` ✓
+- Frontend WebSocket subscription: `web/src/websocket/notificationChannel.ts` subscribes to `user.${userId}.notifications` ✓ — already wired in `AppShell.tsx:95-106` via `subscribeToStaffNotifications()`
+- `NotificationStore` (`web/src/stores/NotificationStore.ts`): fully implemented with `fetchNotifications`, `markAllRead`, `receiveNotification` ✓
+- `NotificationService.ts` correctly uses `api.patch('/notifications/{id}/read')` ✓
 
 ### Subtasks
 
 | # | Subtask |
 |---|---|
-| B4.1 | **Review**: Confirm all 4 routes are registered in `api/routes/api.php` (search for `notifications`) |
-| B4.2 | **Review**: Read `NotificationResource` — check fields returned. UI needs: `id`, `type`, `title`, `body`, `icon_type` (maps to icon in dropdown), `action_url?`, `read_at`, `created_at` |
-| B4.3 | **Gap fix**: If `NotificationResource` is missing `title`, `body`, or `icon_type`, add those fields (read from `data` JSON column) |
-| B4.4 | **Review**: Find any `Notification*` broadcast event — check it fires when a notification is created and carries the same shape as `NotificationResource` |
-| B4.5 | **Gap fix**: If no broadcast event exists, create `NotificationCreated` event on `notifications.{userId}` private Reverb channel |
-| B4.6 | **Frontend wire-up** (do in T3): `NotificationStore` calls `GET /api/v1/notifications` on mount + `unread-count` for badge; `NotifDropdown` reads from store; "Mark all read" calls `POST /api/v1/notifications/mark-all-read` |
+| B4.1 | ~~**Review routes**~~ **Already confirmed** (see above) |
+| B4.2 | ~~**Review NotificationResource fields**~~ **Already confirmed** — `title`, `body`, `type`, `data`, `read_at`, `created_at` all present |
+| B4.3 | **Gap fix**: Add `icon_type` to `NotificationResource::toArray()` — read from `$this->data['icon_type'] ?? null`; valid values match the icon map in `NotifDropdown` | `api/app/Http/Resources/Notifications/NotificationResource.php` |
+| B4.4 | ~~**Review broadcast event**~~ **Already confirmed** — `NotificationCreated` at `api/app/Events/Notifications/NotificationCreated.php` broadcasts correct payload |
+| B4.5 | ~~**Create broadcast event**~~ **Not needed** — already exists |
+| B4.6 | **Frontend wire-up** (do in T3): `NotifDropdown` reads `useNotificationStore()` (hook at `context.tsx:82`); "Mark all read" calls `notifications.markAllRead()`. WebSocket subscription moves from `AppShell.tsx:95-106` into `Header.tsx` (or stays in AppShell — decide in T4) |
 
-**Key files:** `api/app/Http/Controllers/Api/V1/Notifications/NotificationController.php`, `api/app/Http/Resources/Notifications/NotificationResource.php`, `api/routes/api.php`
+**Key files:** `api/app/Http/Resources/Notifications/NotificationResource.php:12-29` (add `icon_type`), `web/src/stores/NotificationStore.ts`, `web/src/services/NotificationService.ts`, `web/src/websocket/notificationChannel.ts`
 
 ---
 
@@ -321,7 +357,7 @@ A list of up to N email + role pairs → creates pending staff invitations or di
 |---|---|
 | B5.1 | **Review**: Read `OnboardingController`, `OnboardingService`, `StaffController` — understand how staff accounts are created to reuse the pattern |
 | B5.2 | **New endpoint**: `POST /api/v1/onboarding/invite-staff` — accepts `invites: [{ email, role_slug }]` array (max 10); creates `User` records with `status = invited` and sends password-set emails; advances onboarding to `invites_sent` step |
-| B5.3 | **Service method**: `OnboardingService::inviteStaff(array invites, Tenant tenant): void` — loops invites, creates users via existing `StaffController` creation logic, dispatches `StaffInvitedNotification` queued job |
+| B5.3 | **Service method**: `OnboardingService::inviteStaff(array invites, Tenant tenant): void` — loops invites, creates users via existing `StaffController` creation logic, dispatches `StaffInvitedNotification` queued job. **Email dispatch blocked by Decision 9** — add `// TODO Decision 9` stub; create users with `status = invited` so invite still registers even without email |
 | B5.4 | **Validation**: each invite must have valid email + role_slug that exists in tenant's roles; duplicates silently skipped |
 | B5.5 | **Frontend wire-up** (do in T5): Step 2 of `OnboardingScreen` calls `authStore.inviteStaff(invites)`; "Skip for now" calls `POST /api/v1/onboarding/complete` directly |
 | B5.6 | **Tests**: invites create users, skip-for-now completes onboarding, duplicate email skipped, invalid role rejected |
@@ -333,13 +369,15 @@ A list of up to N email + role pairs → creates pending staff invitations or di
 ## T1 — Foundation: CSS tokens + theme system
 **No dependencies.**
 
+> **Status note**: `--cl-bg`, `--cl-card`, `--cl-danger`, `--cl-warning`, `--cl-success`, `--cl-muted`, `--cl-border`, `--cl-text`, `--cl-text-soft`, `--cl-primary`, `--cl-dark` are **already present** in `:root` at `index.css:108-119`. Subtask 1.1 below is effectively done — verify and skip if tokens match design values.
+
 | # | Subtask | File |
 |---|---|---|
-| 1.1 | Add `--cl-bg`, `--cl-card`, `--cl-danger`, `--cl-warning`, `--cl-success`, `--cl-muted`, `--cl-border`, `--cl-text`, `--cl-text-soft` to `:root` | `web/src/index.css` |
-| 1.2 | Add `--cl-primary` + `--cl-dark` per-theme tokens to `[data-theme="ocean"]`, `[data-theme="forest"]`, `[data-theme="sunrise"]` blocks | `web/src/index.css` |
-| 1.3 | Add keyframes: `pulse`, `slideIn`, `fadeIn` | `web/src/index.css` |
-| 1.4 | Rename `[data-theme="orange"]` → `[data-theme="sunrise"]` | `web/src/index.css` |
-| 1.5 | Update `ThemeId` type: `'orange'` → `'sunrise'`; update cookie fallback guard; update `THEMES` array id | `web/src/lib/theme.ts` |
+| 1.1 | ~~Add `--cl-bg` … `--cl-text-soft` to `:root`~~ **Already done** (`index.css:108-119`). Verify hex values match design; update if different. | `web/src/index.css` |
+| 1.2 | Add `--cl-primary` + `--cl-dark` **per-theme override** to each `[data-theme]` block — the block-level overrides are missing. Ocean block: `index.css:182-199`; Forest: `200-219`; Sunrise/orange: `221-239`. Values: Ocean `--cl-primary:#4A7FA7 --cl-dark:#1A3D63`, Forest `--cl-primary:#68BA7F --cl-dark:#2E6F40`, Sunrise `--cl-primary:#F97316 --cl-dark:#C2410C` | `web/src/index.css` |
+| 1.3 | Add keyframes: `pulse` (opacity 1→0.5→1), `slideIn` (translateY(-8px)→0 + opacity), `fadeIn` (opacity 0→1) | `web/src/index.css` |
+| 1.4 | Rename `[data-theme="orange"]` (line 222) → `[data-theme="sunrise"]`; update comment line 221 "Sunrise (Moniex Orange)" → "Sunrise" | `web/src/index.css` |
+| 1.5 | `ThemeId` (line 3): `'orange'` → `'sunrise'`; `THEMES[2].id` (line 16): `'orange'` → `'sunrise'`; `getThemeCookie` guard (line 28) auto-handles via `THEMES.some()` but verify after rename | `web/src/lib/theme.ts` |
 
 ---
 
@@ -357,6 +395,8 @@ A list of up to N email + role pairs → creates pending staff invitations or di
 
 **File:** `web/src/components/layout/Sidebar.tsx`
 
+**Code to migrate from AppShell:** Nav items currently defined as `NAV_ITEMS` array at `AppShell.tsx:63-76`; `SidebarNavItem` sub-component at `AppShell.tsx:250-277`. Move + expand these. Branch selector is `BranchSwitcher.tsx` at `components/layout/BranchSwitcher.tsx` — replace with inline branch popover reading from `useBranchStore()` (`context.tsx:22`).
+
 ---
 
 ## T3 — Shell: Header + three dropdowns
@@ -373,6 +413,8 @@ A list of up to N email + role pairs → creates pending staff invitations or di
 
 **Files:** `web/src/components/layout/Header.tsx`, `NotifDropdown.tsx`, `MessagesDropdown.tsx`, `UserDropdown.tsx`
 
+**Existing components to replace:** `NotificationBell.tsx` at `components/layout/NotificationBell.tsx` → replaced by `NotifDropdown.tsx`. `UserMenu.tsx` at `components/layout/UserMenu.tsx` → replaced by `UserDropdown.tsx`. `MessagesDropdown` is new (no existing component). `NotificationStore` accessed via `useNotificationStore()` (hook at `context.tsx:82`). `MessagesStore` accessed via `useMessagesStore()` (new hook, created as part of B3).
+
 ---
 
 ## T4 — Shell: AppShell rewrite
@@ -384,9 +426,9 @@ A list of up to N email + role pairs → creates pending staff invitations or di
 | 4.2 | Content area: `marginLeft:256px; paddingTop:72px; paddingRight:20px; paddingBottom:20px; minHeight:100vh; background:var(--cl-bg)` |
 | 4.3 | Content inner card: white, `borderRadius:16px`, shadow, `minHeight:calc(100vh - 92px)`, `overflow:hidden` |
 | 4.4 | Footer inline below card (centred, 12px muted): "© 2026 ChefLogik Ltd · Terms · Privacy · Contact" |
-| 4.5 | Keep impersonation banner (amber strip, `z-index:150`, pushes header down when visible) |
-| 4.6 | Keep `useEffect` notification WebSocket subscription from existing `AppShell` |
-| 4.7 | Remove: `BranchSwitcher` usage, `AppFooter` usage, `UserMenu` usage, old `NotificationBell` usage |
+| 4.5 | Keep impersonation banner (amber strip, `z-index:150`, pushes header down when visible) — preserve logic from `AppShell.tsx:122-140`; `handleEndImpersonation()` at `AppShell.tsx:113-118` (reads `VITE_ADMIN_URL` env var) |
+| 4.6 | Keep `useEffect` notification WebSocket subscription from `AppShell.tsx:95-106` — move init into this rewrite or pass down to `Header.tsx`; either way `notifications.setUnsubscribe()` + cleanup on unmount must be preserved |
+| 4.7 | Remove: `BranchSwitcher` import, `AppFooter` import, `UserMenu` import, `NotificationBell` import — all replaced by new Sidebar/Header sub-components |
 
 **File:** `web/src/components/layout/AppShell.tsx`
 
@@ -404,9 +446,16 @@ A list of up to N email + role pairs → creates pending staff invitations or di
 | 5.5 | `ForgotPasswordScreen.tsx` — email + tenant_slug fields + "Send reset code" btn; calls `authStore.requestPasswordReset()`; navigates to OTP reset mode; **uses B1 `POST /auth/otp/send`** |
 | 5.6 | `AccountLockedScreen.tsx` — lock icon, locked message, countdown from `locked_until` value returned by B1, "Contact administrator" outline btn, Back link |
 | 5.7 | `OnboardingScreen.tsx` — `OnboardProgress` stepper (3 steps); Step 0: Account (name + email + password → `POST /api/public/signup`); Step 1: Restaurant (name + slug + branch count + cuisine → `POST /api/v1/onboarding/branch`); Step 2: Team (invite emails + roles → `POST /api/v1/onboarding/invite-staff` from B5, or "Skip for now" → `POST /api/v1/onboarding/complete`); Done: success icon + "Enter ChefLogik →" |
-| 5.8 | Delete `web/src/components/auth/ForgotPasswordPage.tsx` (folded into LoginPage) |
+| 5.8 | Delete `web/src/components/auth/ForgotPasswordPage.tsx` (folded into LoginPage); update `web/src/routes/forgot-password.tsx` to redirect to `/login` — do not delete the route file, the route is still registered in `routeTree.gen.ts` |
 
-**Files:** `web/src/components/auth/LoginPage.tsx`, `auth/screens/SignInScreen.tsx`, `OTPScreen.tsx`, `ForgotPasswordScreen.tsx`, `AccountLockedScreen.tsx`, `OnboardingScreen.tsx`
+**Files:** `web/src/components/auth/LoginPage.tsx` (rewrite; currently 188 lines, basic sign-in only), `web/src/routes/login.tsx`, `auth/screens/SignInScreen.tsx`, `OTPScreen.tsx`, `ForgotPasswordScreen.tsx`, `AccountLockedScreen.tsx`, `OnboardingScreen.tsx`
+
+**AuthStore changes required (do alongside T5):** Add to `AuthStore.ts`:
+- `lockedUntil: types.maybeNull(types.string)` model field
+- Update `login()` flow: on `AxiosError` with `err.response?.status === 423`, extract `err.response.data.locked_until` → `self.lockedUntil`
+- New `requestPasswordReset(email, tenantSlug)` flow action → `POST /auth/staff/otp/send`
+- New `verifyOtp(code, mode)` flow action → `POST /auth/staff/otp/verify`
+- New `completeOnboarding()` flow action → `POST /onboarding/complete`
 
 ---
 
@@ -464,6 +513,8 @@ A list of up to N email + role pairs → creates pending staff invitations or di
 | 8.7 | Update `web/src/routes/_authenticated/dashboard.tsx` |
 
 **Files:** `web/src/components/dashboard/*.tsx`, `web/src/routes/_authenticated/dashboard.tsx`
+
+**Store dependency:** `DashboardStore` created as part of B2. Access via `useDashboardStore()` hook. Existing route at `routes/_authenticated/dashboard.tsx` renders current placeholder — replace component reference here.
 
 ---
 
@@ -622,13 +673,15 @@ A list of up to N email + role pairs → creates pending staff invitations or di
 |---|---|
 | 18.1 | Delete `web/src/assets/hero.png` |
 | 18.2 | Delete `web/src/assets/vite.svg` |
-| 18.3 | Delete or clear `web/public/login-bg.png` (login uses CSS gradient now) — remove all references |
+| 18.3 | Delete or clear `web/public/login-bg.png` (login uses CSS gradient now) — remove all references; currently referenced at `LoginPage.tsx:34` |
 | 18.4 | Delete `web/src/components/layout/UserMenu.tsx` — replaced by `UserDropdown.tsx` |
 | 18.5 | Delete `web/src/components/layout/BranchSwitcher.tsx` — integrated into `Sidebar.tsx` |
 | 18.6 | Delete `web/src/components/layout/AppFooter.tsx` — inline in AppShell |
 | 18.7 | Delete `web/src/components/auth/ForgotPasswordPage.tsx` — folded into `LoginPage.tsx` |
-| 18.8 | Run `npm run lint` — verify no broken imports |
-| 18.9 | Run `npm run test` — verify no regressions |
+| 18.8 | Delete `web/src/components/layout/NotificationBell.tsx` — replaced by `NotifDropdown.tsx` in T3 |
+| 18.9 | Update `web/src/routes/forgot-password.tsx` — replace with redirect to `/login` (route still registered in `routeTree.gen.ts`; do not delete) |
+| 18.10 | Run `npm run lint` — verify no broken imports |
+| 18.11 | Run `npm run test` — verify no regressions |
 
 ---
 
