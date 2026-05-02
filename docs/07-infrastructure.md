@@ -171,10 +171,10 @@ web:            # Nginx container — resources, HPA, health probes
 
 ## Environments and Domains
 
-| Environment | API | Staff app | Admin app |
-|---|---|---|---|
-| Staging | `staging.api.cheflogik.com` | `staging.app.cheflogik.com` | `staging.admin.cheflogik.com` |
-| Production | `api.cheflogik.com` | `app.cheflogik.com` | `admin.cheflogik.com` |
+| Environment | API                         | Staff app                   | Admin app                     |
+|---|-----------------------------|-----------------------------|-------------------------------|
+| Staging | `api-staging.cheflogik.com` | `app-staging.cheflogik.com` | `admin-staging.cheflogik.com` |
+| Production | `api.cheflogik.com`         | `app.cheflogik.com`         | `admin.cheflogik.com`         |
 
 TLS certificates are provisioned automatically by cert-manager:
 - Staging: `letsencrypt-staging` issuer

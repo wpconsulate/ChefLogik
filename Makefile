@@ -21,7 +21,7 @@ api-stop: ## Stop and remove the frontend container
 api-restart: api-stop api-build api-run
 
 api-shell: ## Open a bash shell in the app container
-	cd api && docker exec -it $(API_CONTAINER) bash
+	cd api && docker exec -it $(API_CONTAINER) sh
 
 
 # ── Frontend  ────────────────────────────────────────────────────
